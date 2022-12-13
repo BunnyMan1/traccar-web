@@ -100,13 +100,23 @@ const ReportFilter = ({
     });
   };
 
+  /// Function to handle changes made to Device/Devices dropdown by the user.
   function handleChangeInDeviceSelect(e) {
+    // Check the current event item's target's value and if multi select option is on or off.
+    // if it contains 'all' user has clicked on select all option.
+    // if not then user has clicked on something else.
     if (multiDevice && e.target.value.includes("all")) {
+      // Check if select all is already tapped
+      //  if true => `unselect all` action should be performed.
+      //  if false => `select all` action should be performed.
       if (isDevicesSelectAll) {
+        // unselect all case.
         dispatch(reportsActions.updateDeviceIds([]));
         setIsDevicesSelectAll(false);
         return;
       }
+
+      // select all case.
       const ids = [];
       Object.keys(devices).forEach((d) => ids.push(devices[d].id));
       dispatch(reportsActions.updateDeviceIds(ids));
@@ -121,13 +131,24 @@ const ReportFilter = ({
     setIsDevicesSelectAll(false);
   }
 
+  /// Function to handle changes made to Groups dropdown by the user.
   function handleChangeInGroupSelect(e) {
+    // Check the current event item's target's value.
+    // if it contains 'all' user has clicked on select all option.
+    // if not then user has clicked on something else.
     if (e.target.value.includes("all")) {
+      // Check if select all is already tapped
+      //  if true => `unselect all` action should be performed.
+      //  if false => `select all` action should be performed.
       if (isGroupsSelectAll) {
+        // unselect all case.
         dispatch(reportsActions.updateGroupIds([]));
+        // setting state to false ==> unselect done.
         setIsGroupsSelectAll(false);
         return;
       }
+
+      // select all case.
       const ids = [];
       Object.keys(groups).forEach((d) => ids.push(groups[d].id));
       dispatch(reportsActions.updateGroupIds(ids));
@@ -153,7 +174,7 @@ const ReportFilter = ({
               multiple={multiDevice}
             >
               <MenuItem key="all" value="all" className={classes.selectAll}>
-                { isDevicesSelectAll ? 'Unselect All' : 'Select All'}
+                {isDevicesSelectAll ? "Unselect All" : "Select All"}
               </MenuItem>
               {Object.values(devices)
                 .sort((a, b) => a.name.localeCompare(b.name))
@@ -177,7 +198,7 @@ const ReportFilter = ({
               multiple
             >
               <MenuItem key="all" value="all" className={classes.selectAll}>
-                { isGroupsSelectAll ? 'Unselect All' : 'Select All'}
+                {isGroupsSelectAll ? "Unselect All" : "Select All"}
               </MenuItem>
               {Object.values(groups)
                 .sort((a, b) => a.name.localeCompare(b.name))
