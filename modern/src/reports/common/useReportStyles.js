@@ -46,4 +46,8 @@ export default makeStyles((theme) => ({
     flexGrow: 1,
     overflow: 'hidden',
   },
+  selectAll: {
+    fontSize: '12px',
+    fontWeight: 400,
+  },
 }));
