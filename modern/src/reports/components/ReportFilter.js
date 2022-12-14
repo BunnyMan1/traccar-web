@@ -8,6 +8,7 @@ import {
   Button,
   TextField,
   Typography,
+  Checkbox,
 } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
 import moment from "moment";
@@ -159,6 +160,18 @@ const ReportFilter = ({
     setIsGroupsSelectAll(false);
   }
 
+  function renderValueForDevicesDropdown(e) {
+    let items = Object.values(devices).filter((d) => e.includes(d.id));
+    items = items.map((i) => (items.indexOf(i) !== items.length - 1 ? `${i.name}, ` : i.name));
+    return items;
+  }
+
+  function renderValueForGroupsDropdown(e) {
+    let items = Object.values(groups).filter((g) => e.includes(g.id));
+    items = items.map((i) => (items.indexOf(i) !== items.length - 1 ? `${i.name}, ` : i.name));
+    return items;
+  }
+
   return (
     <div className={classes.filter}>
       {!ignoreDevice && (
@@ -172,15 +185,28 @@ const ReportFilter = ({
               value={multiDevice ? deviceIds : deviceId || ""}
               onChange={(e) => handleChangeInDeviceSelect(e)}
               multiple={multiDevice}
+              renderValue={
+                multiDevice ? (e) => renderValueForDevicesDropdown(e) : null
+              }
             >
-              <MenuItem key="all" value="all" className={classes.selectAll}>
-                {isDevicesSelectAll ? "Unselect All" : "Select All"}
-              </MenuItem>
+              {multiDevice ? (
+                <MenuItem key="all" value="all" className={classes.selectAll}>
+                  {isDevicesSelectAll ? "Unselect All" : "Select All"}
+                </MenuItem>
+              ) : null}
               {Object.values(devices)
                 .sort((a, b) => a.name.localeCompare(b.name))
                 .map((device) => (
                   <MenuItem key={device.id} value={device.id}>
-                    {device.name}
+                    <div className={classes.rowC}>
+                      {multiDevice ? (
+                        <Checkbox
+                          checked={deviceIds?.indexOf(device.id) > -1}
+                        />
+                      ) : null}
+                      <div className={classes.dropdownText}>{device.name}</div>
+
+                    </div>
                   </MenuItem>
                 ))}
             </Select>
@@ -196,6 +222,7 @@ const ReportFilter = ({
               value={groupIds}
               onChange={(e) => handleChangeInGroupSelect(e)}
               multiple
+              renderValue={(e) => renderValueForGroupsDropdown(e)}
             >
               <MenuItem key="all" value="all" className={classes.selectAll}>
                 {isGroupsSelectAll ? "Unselect All" : "Select All"}
@@ -204,7 +231,10 @@ const ReportFilter = ({
                 .sort((a, b) => a.name.localeCompare(b.name))
                 .map((group) => (
                   <MenuItem key={group.id} value={group.id}>
-                    {group.name}
+                    <div className={classes.rowC}>
+                      <Checkbox checked={groupIds?.indexOf(group.id) > -1} />
+                      <div className={classes.dropdownText}>{group.name}</div>
+                    </div>
                   </MenuItem>
                 ))}
             </Select>

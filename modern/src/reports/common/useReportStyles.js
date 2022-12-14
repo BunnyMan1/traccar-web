@@ -50,4 +50,16 @@ export default makeStyles((theme) => ({
     fontSize: '12px',
     fontWeight: 400,
   },
+  rowC: {
+    display: 'flex',
+    flexDirection: 'row',
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  dropdownText: {
+    display: 'flex',
+    flexDirection: 'row',
+    flexGrow: 1,
+  },
 }));
