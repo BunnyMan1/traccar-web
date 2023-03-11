@@ -49,6 +49,7 @@ const MainToolbar = ({
 
   const groups = useSelector((state) => state.groups.items);
   const devices = useSelector((state) => state.devices.items);
+  const positions = useSelector((state) => state.session.positions);
 
   const toolbarRef = useRef();
   const inputRef = useRef();
@@ -56,6 +57,17 @@ const MainToolbar = ({
   const [devicesAnchorEl, setDevicesAnchorEl] = useState(null);
 
   const deviceStatusCount = (status) => Object.values(devices).filter((d) => d.status === status).length;
+  const deviceMovingCount = (status) => {
+    if (status === 'all') return Object.values(devices).length;
+
+    if (Object.values(positions).length === 0 && status === 'no-motion') return Object.values(devices).length;
+
+    return Object.values(positions).filter((p) => {
+      if (status === 'motion') return p.attributes?.motion === true;
+
+      return !p.attributes || p.attributes.motion === false;
+    }).length;
+  };
 
   return (
     <Toolbar ref={toolbarRef} className={classes.toolbar}>
@@ -72,7 +84,7 @@ const MainToolbar = ({
         endAdornment={(
           <InputAdornment position="end">
             <IconButton size="small" edge="end" onClick={() => setFilterAnchorEl(inputRef.current)}>
-              <Badge color="info" variant="dot" invisible={!filter.statuses.length && !filter.groups.length}>
+              <Badge color="info" variant="dot" invisible={!filter.statuses.length && !filter.groups.length && filter.motion === 'all'}>
                 <TuneIcon fontSize="small" />
               </Badge>
             </IconButton>
@@ -129,7 +141,19 @@ const MainToolbar = ({
             >
               <MenuItem value="online">{`${t('deviceStatusOnline')} (${deviceStatusCount('online')})`}</MenuItem>
               <MenuItem value="offline">{`${t('deviceStatusOffline')} (${deviceStatusCount('offline')})`}</MenuItem>
-              <MenuItem value="unknown">{`${t('deviceStatusUnknown')} (${deviceStatusCount('unknown')})`}</MenuItem>
+              <MenuItem value="unknown">{`Offline - Unknown (${deviceStatusCount('unknown')})`}</MenuItem>
+            </Select>
+          </FormControl>
+          <FormControl>
+            <InputLabel>Motion</InputLabel>
+            <Select
+              label="Motion"
+              value={filter.motion}
+              onChange={(e) => setFilter({ ...filter, motion: e.target.value })}
+            >
+              <MenuItem value="all">{`All (${deviceMovingCount('all')})`}</MenuItem>
+              <MenuItem value="motion">{`In Motion (${deviceMovingCount('motion')})`}</MenuItem>
+              <MenuItem value="no-motion">{`No Motion (${deviceMovingCount('no-motion')})`}</MenuItem>
             </Select>
           </FormControl>
           <FormControl>
