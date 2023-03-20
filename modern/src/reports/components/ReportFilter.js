@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import {
-  FormControl, InputLabel, Select, MenuItem, Button, TextField, Typography, Checkbox,
+  FormControl, InputLabel, Select, MenuItem, Button, TextField, Typography, Checkbox, Snackbar, Alert,
+  // Autocomplete,
 } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
 import moment from 'moment';
@@ -37,6 +38,32 @@ const ReportFilter = ({ children, handleSubmit, handleSchedule, showOnly, ignore
 
   const [isDevicesSelectAll, setIsDevicesSelectAll] = useState(false);
   const [isGroupsSelectAll, setIsGroupsSelectAll] = useState(false);
+
+  const [isShowErrorSnackbar, setIsShowErrorSnackbar] = useState(false);
+
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+
+  const [isExportDisable, setIsExportDisable] = useState(false);
+
+  const vertical = 'top';
+  const horizontal = 'center';
+
+  let timer = null;
+
+  const snackbarClose = () => {
+    setIsShowErrorSnackbar(false);
+  };
+
+  const disableAfterExport = () => {
+    setIsExportDisable(true);
+    setSnackbarMessage('Email has been requested and it will be delivered between 5-30 minutes from now.');
+    setIsShowErrorSnackbar(true);
+    timer = setTimeout(() => {
+      setIsExportDisable(false);
+      setIsShowErrorSnackbar(false);
+      clearTimeout(timer);
+    }, 30000);
+  };
 
   const handleClick = (type) => {
     if (type === 'schedule') {
@@ -78,6 +105,14 @@ const ReportFilter = ({ children, handleSubmit, handleSchedule, showOnly, ignore
           selectedTo = moment(to, moment.HTML5_FMT.DATETIME_LOCAL);
           break;
       }
+      if (selectedTo.diff(selectedFrom, 'minutes') > 10080) {
+        // show snackbar.
+        setSnackbarMessage('Difference between from and to dates should be less than a week.');
+        setIsShowErrorSnackbar(true);
+        return;
+      }
+      // console.log(selectedFrom);
+      // console.log(selectedTo);
 
       handleSubmit({
         deviceId,
@@ -88,6 +123,8 @@ const ReportFilter = ({ children, handleSubmit, handleSchedule, showOnly, ignore
         calendarId,
         type,
       });
+
+      if (type === 'mail') { disableAfterExport(); }
     }
   };
 
@@ -170,6 +207,18 @@ const ReportFilter = ({ children, handleSubmit, handleSchedule, showOnly, ignore
     <div className={classes.filter}>
       {!ignoreDevice && (
         <div className={classes.filterItem}>
+          <Snackbar
+            open={isShowErrorSnackbar}
+            onClose={snackbarClose}
+            anchorOrigin={{ vertical, horizontal }}
+            autoHideDuration={15000}
+            ClickAwayListenerProps={{ onClickAway: () => null }}
+          >
+            <Alert onClose={snackbarClose} severity="warning" sx={{ width: '100%' }}>
+              {snackbarMessage}
+            </Alert>
+          </Snackbar>
+
           <FormControl fullWidth>
             <InputLabel>{t(multiDevice ? 'deviceTitle' : 'reportDevice')}</InputLabel>
             <Select
@@ -205,6 +254,37 @@ const ReportFilter = ({ children, handleSubmit, handleSchedule, showOnly, ignore
         <div className={classes.filterItem}>
           <FormControl fullWidth>
             <InputLabel>{t('settingsGroups')}</InputLabel>
+            {/* <Autocomplete
+              multiple
+              label={t('settingsGroups')}
+              // value={groupIds}
+              options={['1', '2', '3']}
+              values={['1', '2', '3']}
+              getOptionLabel={(option) => option.title}
+              filterSelectedOptions
+              onChange={(e) => handleChangeInGroupSelect(e)}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                />
+              )}
+              renderValue={(e) => renderValueForGroupsDropdown(e)}
+            >
+              <MenuItem key="all" value="all" className={classes.selectAll}>
+                {isGroupsSelectAll ? 'Unselect All' : 'Select All'}
+              </MenuItem>
+
+              {Object.values(groups).sort((a, b) => a.name.localeCompare(b.name)).map((group) => (
+                <MenuItem key={group.id} value={group.id}>
+                  <div className={classes.rowC}>
+                    <Checkbox checked={groupIds?.indexOf(group.id) > -1} />
+                    <div className={classes.dropdownText}>
+                      {group.name}
+                    </div>
+                  </div>
+                </MenuItem>
+              ))}
+            </Autocomplete> */}
             <Select
               label={t('settingsGroups')}
               value={groupIds}
@@ -240,8 +320,8 @@ const ReportFilter = ({ children, handleSubmit, handleSchedule, showOnly, ignore
                 <MenuItem value="yesterday">{t('reportYesterday')}</MenuItem>
                 <MenuItem value="thisWeek">{t('reportThisWeek')}</MenuItem>
                 <MenuItem value="previousWeek">{t('reportPreviousWeek')}</MenuItem>
-                <MenuItem value="thisMonth">{t('reportThisMonth')}</MenuItem>
-                <MenuItem value="previousMonth">{t('reportPreviousMonth')}</MenuItem>
+                {/* <MenuItem value="thisMonth">{t('reportThisMonth')}</MenuItem>
+                <MenuItem value="previousMonth">{t('reportPreviousMonth')}</MenuItem> */}
                 <MenuItem value="custom">{t('reportCustom')}</MenuItem>
               </Select>
             </FormControl>
@@ -297,28 +377,28 @@ const ReportFilter = ({ children, handleSubmit, handleSchedule, showOnly, ignore
             fullWidth
             variant="outlined"
             color="secondary"
-            disabled={disabled}
-            onClick={() => handleClick('json')}
+            disabled={disabled || isExportDisable}
+            onClick={() => handleClick('mail')}
           >
-            <Typography variant="button" noWrap>{t('reportShow')}</Typography>
+            <Typography variant="button" noWrap>{t('reportEmail')}</Typography>
           </Button>
         ) : (
           <SplitButton
             fullWidth
             variant="outlined"
             color="secondary"
-            disabled={disabled}
-            onClick={handleClick}
+            disabled={disabled || isExportDisable}
+            onClick={isExportDisable ? null : handleClick}
             selected={button}
             setSelected={(value) => dispatch(reportsActions.updateButton(value))}
-            options={readonly ? {
+            options={(readonly) ? {
+              mail: t('reportEmail'),
               json: t('reportShow'),
               export: t('reportExport'),
-              mail: t('reportEmail'),
             } : {
+              mail: t('reportEmail'),
               json: t('reportShow'),
               export: t('reportExport'),
-              mail: t('reportEmail'),
               schedule: t('reportSchedule'),
             }}
           />

@@ -8,7 +8,8 @@ const { reducer, actions } = createSlice({
     period: 'today',
     from: moment().subtract(1, 'hour').locale('en').format(moment.HTML5_FMT.DATETIME_LOCAL),
     to: moment().locale('en').format(moment.HTML5_FMT.DATETIME_LOCAL),
-    button: 'json',
+    // Set mail to be the default filter action.
+    button: 'mail',
   },
   reducers: {
     updateGroupIds(state, action) {

@@ -94,8 +94,9 @@ const TripReportPage = () => {
     }
   }, [selectedItem]);
 
-  const handleSubmit = useCatch(async ({ deviceIds, from, to, type }) => {
+  const handleSubmit = useCatch(async ({ deviceIds, groupIds, from, to, type }) => {
     const query = new URLSearchParams({ from, to });
+    groupIds.forEach((groupId) => query.append('groupId', groupId));
     deviceIds.forEach((deviceId) => query.append('deviceId', deviceId));
     if (type === 'export') {
       window.location.assign(`/api/reports/trips/xlsx?${query.toString()}`);
@@ -175,7 +176,7 @@ const TripReportPage = () => {
         )}
         <div className={classes.containerMain}>
           <div className={classes.header}>
-            <ReportFilter handleSubmit={handleSubmit} handleSchedule={handleSchedule} multiDevice>
+            <ReportFilter handleSubmit={handleSubmit} handleSchedule={handleSchedule} multiDevice includeGroups>
               <ColumnSelect columns={columns} setColumns={setColumns} columnsArray={columnsArray} />
             </ReportFilter>
           </div>

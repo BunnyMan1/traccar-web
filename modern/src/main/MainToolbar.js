@@ -25,6 +25,22 @@ const useStyles = makeStyles((theme) => ({
     gap: theme.spacing(2),
     width: theme.dimensions.drawerWidthTablet,
   },
+  selectAll: {
+    fontSize: '12px',
+    fontWeight: 400,
+  },
+  rowC: {
+    display: 'flex',
+    flexDirection: 'row',
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  dropdownText: {
+    display: 'flex',
+    flexDirection: 'row',
+    flexGrow: 1,
+  },
 }));
 
 const MainToolbar = ({
@@ -56,6 +72,8 @@ const MainToolbar = ({
   const [filterAnchorEl, setFilterAnchorEl] = useState(null);
   const [devicesAnchorEl, setDevicesAnchorEl] = useState(null);
 
+  const [isGroupsSelectAll, setIsGroupsSelectAll] = useState(false);
+
   const deviceStatusCount = (status) => Object.values(devices).filter((d) => d.status === status).length;
   const deviceMovingCount = (status) => {
     if (status === 'all') return Object.values(devices).length;
@@ -68,6 +86,42 @@ const MainToolbar = ({
       return !p.attributes || p.attributes.motion === false;
     }).length;
   };
+
+  /// Function to handle changes made to Groups dropdown by the user.
+  function handleChangeInGroupSelect(e) {
+    // Check the current event item's target's value.
+    // if it contains 'all' user has clicked on select all option.
+    // if not then user has clicked on something else.
+    if (e.target.value.includes('all')) {
+      // Check if select all is already tapped
+      //  if true => `unselect all` action should be performed.
+      //  if false => `select all` action should be performed.
+      if (isGroupsSelectAll) {
+        // unselect all case.
+        setFilter({ ...filter, groups: [] });
+        // setting state to false ==> unselect done.
+        setIsGroupsSelectAll(false);
+        return;
+      }
+
+      // select all case.
+      const ids = [];
+      Object.keys(groups).forEach((d) => ids.push(groups[d].id));
+      setFilter({ ...filter, groups: ids });
+      setIsGroupsSelectAll(true);
+      return;
+    }
+
+    setFilter({ ...filter, groups: e.target.value });
+
+    setIsGroupsSelectAll(false);
+  }
+
+  function renderValueForGroupsDropdown(e) {
+    let items = Object.values(groups).filter((g) => e.includes(g.id));
+    items = items.map((i) => (items.indexOf(i) !== items.length - 1 ? `${i.name}, ` : i.name));
+    return items;
+  }
 
   return (
     <Toolbar ref={toolbarRef} className={classes.toolbar}>
@@ -161,12 +215,28 @@ const MainToolbar = ({
             <Select
               label={t('settingsGroups')}
               value={filter.groups}
-              onChange={(e) => setFilter({ ...filter, groups: e.target.value })}
+              // onChange={(e) => setFilter({ ...filter, groups: e.target.value })}
+              onChange={(e) => handleChangeInGroupSelect(e)}
+              renderValue={(e) => renderValueForGroupsDropdown(e)}
               multiple
             >
+              <MenuItem key="all" value="all" className={classes.selectAll}>
+                {isGroupsSelectAll ? 'Unselect All' : 'Select All'}
+              </MenuItem>
+
               {Object.values(groups).sort((a, b) => a.name.localeCompare(b.name)).map((group) => (
-                <MenuItem key={group.id} value={group.id}>{group.name}</MenuItem>
+                <MenuItem key={group.id} value={group.id}>
+                  <div className={classes.rowC}>
+                    <Checkbox checked={filter.groups.includes(group.id)} />
+                    <div className={classes.dropdownText}>
+                      {group.name}
+                    </div>
+                  </div>
+                </MenuItem>
               ))}
+              {/* {Object.values(groups).sort((a, b) => a.name.localeCompare(b.name)).map((group) => (
+                <MenuItem key={group.id} value={group.id}>{group.name}</MenuItem>
+              ))} */}
             </Select>
           </FormControl>
           <FormControl>
