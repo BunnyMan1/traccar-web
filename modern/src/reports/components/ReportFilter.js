@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import React, { useState } from 'react';
 import {
   FormControl, InputLabel, Select, MenuItem, Button, TextField, Typography, Checkbox, Snackbar, Alert,
@@ -43,6 +44,8 @@ const ReportFilter = ({ children, handleSubmit, handleSchedule, showOnly, ignore
 
   const [snackbarMessage, setSnackbarMessage] = useState('');
 
+  const [snackbarSeverity, setSnackbarSeverity] = useState('');
+
   const [isExportDisable, setIsExportDisable] = useState(false);
 
   const vertical = 'top';
@@ -56,7 +59,8 @@ const ReportFilter = ({ children, handleSubmit, handleSchedule, showOnly, ignore
 
   const disableAfterExport = () => {
     setIsExportDisable(true);
-    setSnackbarMessage('Email has been requested and it will be delivered between 5-30 minutes from now.');
+    setSnackbarMessage('Report email has been requested and it will be delivered between 5-30 minutes from now. \n \n \n Note: Do NOT request report email once again. Please wait for the current request report to be delivered.');
+    setSnackbarSeverity('success');
     setIsShowErrorSnackbar(true);
     timer = setTimeout(() => {
       setIsExportDisable(false);
@@ -107,7 +111,8 @@ const ReportFilter = ({ children, handleSubmit, handleSchedule, showOnly, ignore
       }
       if (selectedTo.diff(selectedFrom, 'minutes') > 10080) {
         // show snackbar.
-        setSnackbarMessage('Difference between from and to dates should be less than a week.');
+        setSnackbarMessage('Difference between from and to dates should be less than one week.');
+        setSnackbarSeverity('warning');
         setIsShowErrorSnackbar(true);
         return;
       }
@@ -191,6 +196,12 @@ const ReportFilter = ({ children, handleSubmit, handleSchedule, showOnly, ignore
     setIsGroupsSelectAll(false);
   }
 
+  // eslint-disable-next-line no-unused-vars, arrow-body-style
+  const snackbarMessageData = () => {
+    // eslint-disable-next-line react/no-danger
+    return (<p dangerouslySetInnerHTML={snackbarMessage} />);
+  };
+
   function renderValueForDevicesDropdown(e) {
     let items = Object.values(devices).filter((d) => e.includes(d.id));
     items = items.map((i) => (items.indexOf(i) !== items.length - 1 ? `${i.name}, ` : i.name));
@@ -214,7 +225,7 @@ const ReportFilter = ({ children, handleSubmit, handleSchedule, showOnly, ignore
             autoHideDuration={15000}
             ClickAwayListenerProps={{ onClickAway: () => null }}
           >
-            <Alert onClose={snackbarClose} severity="warning" sx={{ width: '100%' }}>
+            <Alert onClose={snackbarClose} severity={snackbarSeverity} sx={{ width: '100%' }}>
               {snackbarMessage}
             </Alert>
           </Snackbar>
@@ -255,12 +266,24 @@ const ReportFilter = ({ children, handleSubmit, handleSchedule, showOnly, ignore
           <FormControl fullWidth>
             <InputLabel>{t('settingsGroups')}</InputLabel>
             {/* <Autocomplete
+              disablePortal
               multiple
-              label={t('settingsGroups')}
-              // value={groupIds}
-              options={['1', '2', '3']}
-              values={['1', '2', '3']}
-              getOptionLabel={(option) => option.title}
+              // label={t('settingsGroups')}
+              // values={groupIds}
+              value={groupIds}
+              options={Object.values(groups).map((g) => g.name)}
+              // options={Object.values(groups).sort((a, b) => a.name.localeCompare(b.name)).map((group) => (
+              //   <MenuItem key={group.id} value={group.id}>
+              //     <div className={classes.rowC}>
+              //       <Checkbox checked={groupIds?.indexOf(group.id) > -1} />
+              //       <div className={classes.dropdownText}>
+              //         {group.name}
+              //       </div>
+              //     </div>
+              //   </MenuItem>
+              // ))}
+              // options={['1', '2', '3']}
+              // values={['1', '2', '3']}
               filterSelectedOptions
               onChange={(e) => handleChangeInGroupSelect(e)}
               renderInput={(params) => (
@@ -285,6 +308,7 @@ const ReportFilter = ({ children, handleSubmit, handleSchedule, showOnly, ignore
                 </MenuItem>
               ))}
             </Autocomplete> */}
+
             <Select
               label={t('settingsGroups')}
               value={groupIds}
