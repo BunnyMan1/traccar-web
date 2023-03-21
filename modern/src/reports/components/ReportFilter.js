@@ -1,17 +1,19 @@
 /* eslint-disable no-unused-vars */
-import React, { useState } from 'react';
+import CheckBoxIcon from '@mui/icons-material/CheckBox';
+import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import {
-  FormControl, InputLabel, Select, MenuItem, Button, TextField, Typography, Checkbox, Snackbar, Alert,
-  // Autocomplete,
+  Alert,
+  Autocomplete, Button, Checkbox, FormControl, InputLabel, MenuItem, Select, Snackbar, TextField, Typography,
 } from '@mui/material';
-import { useDispatch, useSelector } from 'react-redux';
 import moment from 'moment';
+import React, { useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from '../../common/components/LocalizationProvider';
-import useReportStyles from '../common/useReportStyles';
-import { devicesActions, reportsActions } from '../../store';
-import SplitButton from '../../common/components/SplitButton';
 import SelectField from '../../common/components/SelectField';
+import SplitButton from '../../common/components/SplitButton';
 import { useRestriction } from '../../common/util/permissions';
+import { devicesActions, reportsActions } from '../../store';
+import useReportStyles from '../common/useReportStyles';
 
 const ReportFilter = ({ children, handleSubmit, handleSchedule, showOnly, ignoreDevice, multiDevice, includeGroups }) => {
   const classes = useReportStyles();
@@ -44,7 +46,7 @@ const ReportFilter = ({ children, handleSubmit, handleSchedule, showOnly, ignore
 
   const [snackbarMessage, setSnackbarMessage] = useState('');
 
-  const [snackbarSeverity, setSnackbarSeverity] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState('info');
 
   const [isExportDisable, setIsExportDisable] = useState(false);
 
@@ -52,6 +54,9 @@ const ReportFilter = ({ children, handleSubmit, handleSchedule, showOnly, ignore
   const horizontal = 'center';
 
   let timer = null;
+
+  const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
+  const checkedIcon = <CheckBoxIcon fontSize="small" />;
 
   const snackbarClose = () => {
     setIsShowErrorSnackbar(false);
@@ -135,32 +140,48 @@ const ReportFilter = ({ children, handleSubmit, handleSchedule, showOnly, ignore
 
   /// Function to handle changes made to Device/Devices dropdown by the user.
   function handleChangeInDeviceSelect(e) {
-    // Check the current event item's target's value and if multi select option is on or off.
-    // if it contains 'all' user has clicked on select all option.
-    // if not then user has clicked on something else.
-    if (multiDevice && e.target.value.includes('all')) {
-      // Check if select all is already tapped
-      //  if true => `unselect all` action should be performed.
-      //  if false => `select all` action should be performed.
+    // console.log(e);
+    const map = {};
+    let ids = [];
+    if (e.id) {
+      ids.push(e.id);
+    } else {
+      e.forEach(
+        (d) => {
+          const id = (d.id ? d.id : d);
+          ids.push(id);
+          if (map[id]) map[id] += 1;
+          else map[id] = 1;
+        },
+      );
+    }
+    if (multiDevice && ids.includes(-999)) {
+      ids = [];
       if (isDevicesSelectAll) {
         // unselect all case.
-        dispatch(devicesActions.selectIds([]));
+        // setting state to false ==> unselect done.
         setIsDevicesSelectAll(false);
-        return;
+      } else {
+        Object.keys(devices).forEach((d) => ids.push(devices[d].id));
+        setIsDevicesSelectAll(true);
       }
-
-      // select all case.
-      const ids = [];
-      Object.keys(devices).forEach((d) => ids.push(devices[d].id));
+      // console.log(`sending these : ${ids}`);
       dispatch(devicesActions.selectIds(ids));
-      setIsDevicesSelectAll(true);
+
       return;
     }
+    // console.log(`sending these : ${ids}`);
+
+    const temp = [...ids];
+    ids = [];
+    temp.forEach((t) => {
+      if (map[t] === 1) ids.push(t);
+    });
 
     dispatch(
       multiDevice
-        ? devicesActions.selectIds(e.target.value)
-        : devicesActions.selectId(e.target.value),
+        ? devicesActions.selectIds(ids)
+        : devicesActions.selectId(ids),
     );
 
     setIsDevicesSelectAll(false);
@@ -168,50 +189,46 @@ const ReportFilter = ({ children, handleSubmit, handleSchedule, showOnly, ignore
 
   /// Function to handle changes made to Groups dropdown by the user.
   function handleChangeInGroupSelect(e) {
-    // Check the current event item's target's value.
-    // if it contains 'all' user has clicked on select all option.
-    // if not then user has clicked on something else.
-    if (e.target.value.includes('all')) {
-      // Check if select all is already tapped
-      //  if true => `unselect all` action should be performed.
-      //  if false => `select all` action should be performed.
+    // console.log(e);
+    const map = {};
+    let ids = [];
+
+    e.forEach(
+      (d) => {
+        const id = (d.id ? d.id : d);
+        ids.push(id);
+        if (map[id]) map[id] += 1;
+        else map[id] = 1;
+      },
+    );
+    e.forEach((g) => {
+      if (!ids.includes((g.id ? g.id : g))) {
+        ids.push(g.id ? g.id : g);
+      }
+    });
+    if (ids.includes(-999)) {
+      ids = [];
       if (isGroupsSelectAll) {
         // unselect all case.
-        dispatch(reportsActions.updateGroupIds([]));
         // setting state to false ==> unselect done.
         setIsGroupsSelectAll(false);
-        return;
+      } else {
+        Object.keys(groups).forEach((d) => ids.push(groups[d].id));
+        setIsGroupsSelectAll(true);
       }
-
-      // select all case.
-      const ids = [];
-      Object.keys(groups).forEach((d) => ids.push(groups[d].id));
       dispatch(reportsActions.updateGroupIds(ids));
-      setIsGroupsSelectAll(true);
+
       return;
     }
+    const temp = [...ids];
+    ids = [];
+    temp.forEach((t) => {
+      if (map[t] === 1) ids.push(t);
+    });
 
-    dispatch(reportsActions.updateGroupIds(e.target.value));
+    dispatch(reportsActions.updateGroupIds(ids));
 
     setIsGroupsSelectAll(false);
-  }
-
-  // eslint-disable-next-line no-unused-vars, arrow-body-style
-  const snackbarMessageData = () => {
-    // eslint-disable-next-line react/no-danger
-    return (<p dangerouslySetInnerHTML={snackbarMessage} />);
-  };
-
-  function renderValueForDevicesDropdown(e) {
-    let items = Object.values(devices).filter((d) => e.includes(d.id));
-    items = items.map((i) => (items.indexOf(i) !== items.length - 1 ? `${i.name}, ` : i.name));
-    return items;
-  }
-
-  function renderValueForGroupsDropdown(e) {
-    let items = Object.values(groups).filter((g) => e.includes(g.id));
-    items = items.map((i) => (items.indexOf(i) !== items.length - 1 ? `${i.name}, ` : i.name));
-    return items;
   }
 
   return (
@@ -231,85 +248,121 @@ const ReportFilter = ({ children, handleSubmit, handleSchedule, showOnly, ignore
           </Snackbar>
 
           <FormControl fullWidth>
-            <InputLabel>{t(multiDevice ? 'deviceTitle' : 'reportDevice')}</InputLabel>
-            <Select
-              label={t(multiDevice ? 'deviceTitle' : 'reportDevice')}
-              value={multiDevice ? deviceIds : deviceId || ''}
-              onChange={(e) => handleChangeInDeviceSelect(e)}
-              multiple={multiDevice}
-              renderValue={
-                multiDevice ? (e) => renderValueForDevicesDropdown(e) : null
-              }
-            >
-              {multiDevice ? (
-                <MenuItem key="all" value="all" className={classes.selectAll}>
-                  {isDevicesSelectAll ? 'Unselect All' : 'Select All'}
-                </MenuItem>
-              ) : null}
+            {multiDevice && (
+              <Autocomplete
+                multiple={multiDevice}
+                id="select-device"
+                options={multiDevice ? [{ name: 'select all', id: -999 }, ...Object.values(devices)] : Object.values(devices)}
+                getOptionLabel={(option) => {
+                  let n;
+                  Object.values(devices).forEach((e) => {
+                    if (e.id === option) {
+                      n = e.name;
+                    }
+                  });
+                  return n ?? option.name;
+                }}
+                disableCloseOnSelect
+                value={multiDevice ? deviceIds : deviceId}
+                onChange={(e, v, r, d) => handleChangeInDeviceSelect(v)}
+                renderOption={(props, device) => (
+                  <li {...props}>
 
-              {Object.values(devices).sort((a, b) => a.name.localeCompare(b.name)).map((device) => (
-                <MenuItem key={device.id} value={device.id}>
-                  <div className={classes.rowC}>
-                    {multiDevice ? (<Checkbox checked={deviceIds?.indexOf(device.id) > -1} />) : null}
-                    <div className={classes.dropdownText}>
-                      {device.name}
+                    {(device.id === -999 && multiDevice) ?
+                      (
+                        <MenuItem className={classes.selectAll}>
+                          {isDevicesSelectAll ? 'Unselect All' : 'Select All'}
+                        </MenuItem>
+                      )
+                      :
+                      (
+                        <MenuItem>
+                          <div className={classes.rowC}>
+                            <Checkbox checked={multiDevice ? (deviceIds.includes(device.id)) : (deviceId === device.id)} />
+                            <div className={classes.dropdownText}>
+                              {device.name}
+                            </div>
+                          </div>
+                        </MenuItem>
+                      )}
+                  </li>
+                )}
+                renderInput={(params) => (
+                  <TextField {...params} label={t('deviceTitle')} />
+                )}
+              />
+            )}
+            {!multiDevice && (<InputLabel>{t(multiDevice ? 'deviceTitle' : 'reportDevice')}</InputLabel>)}
+            {!multiDevice && (
+              <Select
+                label={t('reportDevice')}
+                value={deviceId || ''}
+                onChange={(e) => dispatch(devicesActions.selectId(e.target.value))}
+              >
+
+                {Object.values(devices).sort((a, b) => a.name.localeCompare(b.name)).map((device) => (
+                  <MenuItem key={device.id} value={device.id}>
+                    <div className={classes.rowC}>
+                      {multiDevice ? (<Checkbox checked={deviceIds?.indexOf(device.id) > -1} />) : null}
+                      <div className={classes.dropdownText}>
+                        {device.name}
+                      </div>
                     </div>
-                  </div>
-                </MenuItem>
-              ))}
-            </Select>
+                  </MenuItem>
+                ))}
+              </Select>
+            )}
           </FormControl>
         </div>
       )}
       {includeGroups && (
         <div className={classes.filterItem}>
           <FormControl fullWidth>
-            <InputLabel>{t('settingsGroups')}</InputLabel>
-            {/* <Autocomplete
-              disablePortal
+            {/* <InputLabel>{t('settingsGroups')}</InputLabel> */}
+
+            <Autocomplete
               multiple
-              // label={t('settingsGroups')}
-              // values={groupIds}
+              id="select-groups"
+              options={[{ name: 'select all', id: -999 }, ...Object.values(groups)]}
+              getOptionLabel={(option) => {
+                let n;
+                Object.values(groups).forEach((e) => {
+                  if (e.id === option) {
+                    n = e.name;
+                  }
+                });
+                return n ?? option.name;
+              }}
+              disableCloseOnSelect
               value={groupIds}
-              options={Object.values(groups).map((g) => g.name)}
-              // options={Object.values(groups).sort((a, b) => a.name.localeCompare(b.name)).map((group) => (
-              //   <MenuItem key={group.id} value={group.id}>
-              //     <div className={classes.rowC}>
-              //       <Checkbox checked={groupIds?.indexOf(group.id) > -1} />
-              //       <div className={classes.dropdownText}>
-              //         {group.name}
-              //       </div>
-              //     </div>
-              //   </MenuItem>
-              // ))}
-              // options={['1', '2', '3']}
-              // values={['1', '2', '3']}
-              filterSelectedOptions
-              onChange={(e) => handleChangeInGroupSelect(e)}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                />
+              onChange={(e, v, r, d) => handleChangeInGroupSelect(v)}
+              renderOption={(props, group) => (
+                <li {...props}>
+                  {group.id === -999 ?
+                    (
+                      <MenuItem className={classes.selectAll}>
+                        {isGroupsSelectAll ? 'Unselect All' : 'Select All'}
+                      </MenuItem>
+                    )
+                    :
+                    (
+                      <MenuItem>
+                        <div className={classes.rowC}>
+                          <Checkbox checked={groupIds.includes(group.id)} />
+                          <div className={classes.dropdownText}>
+                            {group.name}
+                          </div>
+                        </div>
+                      </MenuItem>
+                    )}
+                </li>
               )}
-              renderValue={(e) => renderValueForGroupsDropdown(e)}
-            >
-              <MenuItem key="all" value="all" className={classes.selectAll}>
-                {isGroupsSelectAll ? 'Unselect All' : 'Select All'}
-              </MenuItem>
+              renderInput={(params) => (
+                <TextField {...params} label={t('settingsGroups')} />
+              )}
+            />
 
-              {Object.values(groups).sort((a, b) => a.name.localeCompare(b.name)).map((group) => (
-                <MenuItem key={group.id} value={group.id}>
-                  <div className={classes.rowC}>
-                    <Checkbox checked={groupIds?.indexOf(group.id) > -1} />
-                    <div className={classes.dropdownText}>
-                      {group.name}
-                    </div>
-                  </div>
-                </MenuItem>
-              ))}
-            </Autocomplete> */}
-
-            <Select
+            {/* <Select
               label={t('settingsGroups')}
               value={groupIds}
               onChange={(e) => handleChangeInGroupSelect(e)}
@@ -330,7 +383,7 @@ const ReportFilter = ({ children, handleSubmit, handleSchedule, showOnly, ignore
                   </div>
                 </MenuItem>
               ))}
-            </Select>
+            </Select> */}
           </FormControl>
         </div>
       )}
