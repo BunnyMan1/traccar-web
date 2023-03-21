@@ -262,6 +262,7 @@ const ReportFilter = ({ children, handleSubmit, handleSchedule, showOnly, ignore
                   });
                   return n ?? option.name;
                 }}
+                limitTags={1}
                 disableCloseOnSelect
                 value={multiDevice ? deviceIds : deviceId}
                 onChange={(e, v, r, d) => handleChangeInDeviceSelect(v)}
@@ -270,20 +271,18 @@ const ReportFilter = ({ children, handleSubmit, handleSchedule, showOnly, ignore
 
                     {(device.id === -999 && multiDevice) ?
                       (
-                        <MenuItem className={classes.selectAll}>
+                        <div className={classes.selectAll}>
                           {isDevicesSelectAll ? 'Unselect All' : 'Select All'}
-                        </MenuItem>
+                        </div>
                       )
                       :
                       (
-                        <MenuItem>
-                          <div className={classes.rowC}>
-                            <Checkbox checked={multiDevice ? (deviceIds.includes(device.id)) : (deviceId === device.id)} />
-                            <div className={classes.dropdownText}>
-                              {device.name}
-                            </div>
+                        <div className={classes.rowC}>
+                          <Checkbox size="small" checked={multiDevice ? (deviceIds.includes(device.id)) : (deviceId === device.id)} />
+                          <div className={classes.dropdownText}>
+                            {device.name}
                           </div>
-                        </MenuItem>
+                        </div>
                       )}
                   </li>
                 )}
@@ -301,14 +300,14 @@ const ReportFilter = ({ children, handleSubmit, handleSchedule, showOnly, ignore
               >
 
                 {Object.values(devices).sort((a, b) => a.name.localeCompare(b.name)).map((device) => (
-                  <MenuItem key={device.id} value={device.id}>
-                    <div className={classes.rowC}>
-                      {multiDevice ? (<Checkbox checked={deviceIds?.indexOf(device.id) > -1} />) : null}
-                      <div className={classes.dropdownText}>
-                        {device.name}
-                      </div>
+
+                  <div className={classes.rowC}>
+                    {multiDevice ? (<Checkbox checked={deviceIds?.indexOf(device.id) > -1} />) : null}
+                    <div className={classes.dropdownText}>
+                      {device.name}
                     </div>
-                  </MenuItem>
+                  </div>
+
                 ))}
               </Select>
             )}
@@ -324,6 +323,8 @@ const ReportFilter = ({ children, handleSubmit, handleSchedule, showOnly, ignore
               multiple
               id="select-groups"
               options={[{ name: 'select all', id: -999 }, ...Object.values(groups)]}
+              size="small"
+              limitTags={1}
               getOptionLabel={(option) => {
                 let n;
                 Object.values(groups).forEach((e) => {
@@ -340,20 +341,18 @@ const ReportFilter = ({ children, handleSubmit, handleSchedule, showOnly, ignore
                 <li {...props}>
                   {group.id === -999 ?
                     (
-                      <MenuItem className={classes.selectAll}>
+                      <div className={classes.selectAll}>
                         {isGroupsSelectAll ? 'Unselect All' : 'Select All'}
-                      </MenuItem>
+                      </div>
                     )
                     :
                     (
-                      <MenuItem>
-                        <div className={classes.rowC}>
-                          <Checkbox checked={groupIds.includes(group.id)} />
-                          <div className={classes.dropdownText}>
-                            {group.name}
-                          </div>
+                      <div className={classes.rowC}>
+                        <Checkbox size="small" checked={groupIds.includes(group.id)} />
+                        <div className={classes.dropdownText}>
+                          {group.name}
                         </div>
-                      </MenuItem>
+                      </div>
                     )}
                 </li>
               )}
