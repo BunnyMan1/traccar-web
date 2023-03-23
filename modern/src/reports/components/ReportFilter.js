@@ -1,15 +1,19 @@
-import React, { useState } from 'react';
+/* eslint-disable no-unused-vars */
+import CheckBoxIcon from '@mui/icons-material/CheckBox';
+import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import {
-  FormControl, InputLabel, Select, MenuItem, Button, TextField, Typography, Checkbox,
+  Alert,
+  Autocomplete, Button, Checkbox, FormControl, InputLabel, MenuItem, Select, Snackbar, TextField, Typography,
 } from '@mui/material';
-import { useDispatch, useSelector } from 'react-redux';
 import moment from 'moment';
+import React, { useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from '../../common/components/LocalizationProvider';
-import useReportStyles from '../common/useReportStyles';
-import { devicesActions, reportsActions } from '../../store';
-import SplitButton from '../../common/components/SplitButton';
 import SelectField from '../../common/components/SelectField';
+import SplitButton from '../../common/components/SplitButton';
 import { useRestriction } from '../../common/util/permissions';
+import { devicesActions, reportsActions } from '../../store';
+import useReportStyles from '../common/useReportStyles';
 
 const ReportFilter = ({ children, handleSubmit, handleSchedule, showOnly, ignoreDevice, multiDevice, includeGroups }) => {
   const classes = useReportStyles();
@@ -37,6 +41,38 @@ const ReportFilter = ({ children, handleSubmit, handleSchedule, showOnly, ignore
 
   const [isDevicesSelectAll, setIsDevicesSelectAll] = useState(false);
   const [isGroupsSelectAll, setIsGroupsSelectAll] = useState(false);
+
+  const [isShowErrorSnackbar, setIsShowErrorSnackbar] = useState(false);
+
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+
+  const [snackbarSeverity, setSnackbarSeverity] = useState('info');
+
+  const [isExportDisable, setIsExportDisable] = useState(false);
+
+  const vertical = 'top';
+  const horizontal = 'center';
+
+  let timer = null;
+
+  const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
+  const checkedIcon = <CheckBoxIcon fontSize="small" />;
+
+  const snackbarClose = () => {
+    setIsShowErrorSnackbar(false);
+  };
+
+  const disableAfterExport = () => {
+    setIsExportDisable(true);
+    setSnackbarMessage('Report email has been requested and it will be delivered between 5-30 minutes from now. \n \n \n Note: Do NOT request report email once again. Please wait for the current request report to be delivered.');
+    setSnackbarSeverity('success');
+    setIsShowErrorSnackbar(true);
+    timer = setTimeout(() => {
+      setIsExportDisable(false);
+      setIsShowErrorSnackbar(false);
+      clearTimeout(timer);
+    }, 30000);
+  };
 
   const handleClick = (type) => {
     if (type === 'schedule') {
@@ -78,6 +114,15 @@ const ReportFilter = ({ children, handleSubmit, handleSchedule, showOnly, ignore
           selectedTo = moment(to, moment.HTML5_FMT.DATETIME_LOCAL);
           break;
       }
+      if (selectedTo.diff(selectedFrom, 'minutes') > 10080) {
+        // show snackbar.
+        setSnackbarMessage('Difference between from and to dates should be less than one week.');
+        setSnackbarSeverity('warning');
+        setIsShowErrorSnackbar(true);
+        return;
+      }
+      // console.log(selectedFrom);
+      // console.log(selectedTo);
 
       handleSubmit({
         deviceId,
@@ -88,37 +133,55 @@ const ReportFilter = ({ children, handleSubmit, handleSchedule, showOnly, ignore
         calendarId,
         type,
       });
+
+      if (type === 'mail') { disableAfterExport(); }
     }
   };
 
   /// Function to handle changes made to Device/Devices dropdown by the user.
   function handleChangeInDeviceSelect(e) {
-    // Check the current event item's target's value and if multi select option is on or off.
-    // if it contains 'all' user has clicked on select all option.
-    // if not then user has clicked on something else.
-    if (multiDevice && e.target.value.includes('all')) {
-      // Check if select all is already tapped
-      //  if true => `unselect all` action should be performed.
-      //  if false => `select all` action should be performed.
+    // console.log(e);
+    const map = {};
+    let ids = [];
+    if (e.id) {
+      ids.push(e.id);
+    } else {
+      e.forEach(
+        (d) => {
+          const id = (d.id ? d.id : d);
+          ids.push(id);
+          if (map[id]) map[id] += 1;
+          else map[id] = 1;
+        },
+      );
+    }
+    if (multiDevice && ids.includes(-999)) {
+      ids = [];
       if (isDevicesSelectAll) {
         // unselect all case.
-        dispatch(devicesActions.selectIds([]));
+        // setting state to false ==> unselect done.
         setIsDevicesSelectAll(false);
-        return;
+      } else {
+        Object.keys(devices).forEach((d) => ids.push(devices[d].id));
+        setIsDevicesSelectAll(true);
       }
-
-      // select all case.
-      const ids = [];
-      Object.keys(devices).forEach((d) => ids.push(devices[d].id));
+      // console.log(`sending these : ${ids}`);
       dispatch(devicesActions.selectIds(ids));
-      setIsDevicesSelectAll(true);
+
       return;
     }
+    // console.log(`sending these : ${ids}`);
+
+    const temp = [...ids];
+    ids = [];
+    temp.forEach((t) => {
+      if (map[t] === 1) ids.push(t);
+    });
 
     dispatch(
       multiDevice
-        ? devicesActions.selectIds(e.target.value)
-        : devicesActions.selectId(e.target.value),
+        ? devicesActions.selectIds(ids)
+        : devicesActions.selectId(ids),
     );
 
     setIsDevicesSelectAll(false);
@@ -126,86 +189,179 @@ const ReportFilter = ({ children, handleSubmit, handleSchedule, showOnly, ignore
 
   /// Function to handle changes made to Groups dropdown by the user.
   function handleChangeInGroupSelect(e) {
-    // Check the current event item's target's value.
-    // if it contains 'all' user has clicked on select all option.
-    // if not then user has clicked on something else.
-    if (e.target.value.includes('all')) {
-      // Check if select all is already tapped
-      //  if true => `unselect all` action should be performed.
-      //  if false => `select all` action should be performed.
+    // console.log(e);
+    const map = {};
+    let ids = [];
+
+    e.forEach(
+      (d) => {
+        const id = (d.id ? d.id : d);
+        ids.push(id);
+        if (map[id]) map[id] += 1;
+        else map[id] = 1;
+      },
+    );
+    e.forEach((g) => {
+      if (!ids.includes((g.id ? g.id : g))) {
+        ids.push(g.id ? g.id : g);
+      }
+    });
+    if (ids.includes(-999)) {
+      ids = [];
       if (isGroupsSelectAll) {
         // unselect all case.
-        dispatch(reportsActions.updateGroupIds([]));
         // setting state to false ==> unselect done.
         setIsGroupsSelectAll(false);
-        return;
+      } else {
+        Object.keys(groups).forEach((d) => ids.push(groups[d].id));
+        setIsGroupsSelectAll(true);
       }
-
-      // select all case.
-      const ids = [];
-      Object.keys(groups).forEach((d) => ids.push(groups[d].id));
       dispatch(reportsActions.updateGroupIds(ids));
-      setIsGroupsSelectAll(true);
+
       return;
     }
+    const temp = [...ids];
+    ids = [];
+    temp.forEach((t) => {
+      if (map[t] === 1) ids.push(t);
+    });
 
-    dispatch(reportsActions.updateGroupIds(e.target.value));
+    dispatch(reportsActions.updateGroupIds(ids));
 
     setIsGroupsSelectAll(false);
-  }
-
-  function renderValueForDevicesDropdown(e) {
-    let items = Object.values(devices).filter((d) => e.includes(d.id));
-    items = items.map((i) => (items.indexOf(i) !== items.length - 1 ? `${i.name}, ` : i.name));
-    return items;
-  }
-
-  function renderValueForGroupsDropdown(e) {
-    let items = Object.values(groups).filter((g) => e.includes(g.id));
-    items = items.map((i) => (items.indexOf(i) !== items.length - 1 ? `${i.name}, ` : i.name));
-    return items;
   }
 
   return (
     <div className={classes.filter}>
       {!ignoreDevice && (
         <div className={classes.filterItem}>
-          <FormControl fullWidth>
-            <InputLabel>{t(multiDevice ? 'deviceTitle' : 'reportDevice')}</InputLabel>
-            <Select
-              label={t(multiDevice ? 'deviceTitle' : 'reportDevice')}
-              value={multiDevice ? deviceIds : deviceId || ''}
-              onChange={(e) => handleChangeInDeviceSelect(e)}
-              multiple={multiDevice}
-              renderValue={
-                multiDevice ? (e) => renderValueForDevicesDropdown(e) : null
-              }
-            >
-              {multiDevice ? (
-                <MenuItem key="all" value="all" className={classes.selectAll}>
-                  {isDevicesSelectAll ? 'Unselect All' : 'Select All'}
-                </MenuItem>
-              ) : null}
+          <Snackbar
+            open={isShowErrorSnackbar}
+            onClose={snackbarClose}
+            anchorOrigin={{ vertical, horizontal }}
+            autoHideDuration={15000}
+            ClickAwayListenerProps={{ onClickAway: () => null }}
+          >
+            <Alert onClose={snackbarClose} severity={snackbarSeverity} sx={{ width: '100%' }}>
+              {snackbarMessage}
+            </Alert>
+          </Snackbar>
 
-              {Object.values(devices).sort((a, b) => a.name.localeCompare(b.name)).map((device) => (
-                <MenuItem key={device.id} value={device.id}>
+          <FormControl fullWidth>
+            {multiDevice && (
+              <Autocomplete
+                multiple={multiDevice}
+                id="select-device"
+                options={multiDevice ? [{ name: 'select all', id: -999 }, ...Object.values(devices)] : Object.values(devices)}
+                getOptionLabel={(option) => {
+                  let n;
+                  Object.values(devices).forEach((e) => {
+                    if (e.id === option) {
+                      n = e.name;
+                    }
+                  });
+                  return n ?? option.name;
+                }}
+                limitTags={1}
+                disableCloseOnSelect
+                value={multiDevice ? deviceIds : deviceId}
+                onChange={(e, v, r, d) => handleChangeInDeviceSelect(v)}
+                renderOption={(props, device) => (
+                  <li {...props}>
+
+                    {(device.id === -999 && multiDevice) ?
+                      (
+                        <div className={classes.selectAll}>
+                          {isDevicesSelectAll ? 'Unselect All' : 'Select All'}
+                        </div>
+                      )
+                      :
+                      (
+                        <div className={classes.rowC}>
+                          <Checkbox size="small" checked={multiDevice ? (deviceIds.includes(device.id)) : (deviceId === device.id)} />
+                          <div className={classes.dropdownText}>
+                            {device.name}
+                          </div>
+                        </div>
+                      )}
+                  </li>
+                )}
+                renderInput={(params) => (
+                  <TextField {...params} label={t('deviceTitle')} />
+                )}
+              />
+            )}
+            {!multiDevice && (<InputLabel>{t(multiDevice ? 'deviceTitle' : 'reportDevice')}</InputLabel>)}
+            {!multiDevice && (
+              <Select
+                label={t('reportDevice')}
+                value={deviceId || ''}
+                onChange={(e) => dispatch(devicesActions.selectId(e.target.value))}
+              >
+
+                {Object.values(devices).sort((a, b) => a.name.localeCompare(b.name)).map((device) => (
+
                   <div className={classes.rowC}>
                     {multiDevice ? (<Checkbox checked={deviceIds?.indexOf(device.id) > -1} />) : null}
                     <div className={classes.dropdownText}>
                       {device.name}
                     </div>
                   </div>
-                </MenuItem>
-              ))}
-            </Select>
+
+                ))}
+              </Select>
+            )}
           </FormControl>
         </div>
       )}
       {includeGroups && (
         <div className={classes.filterItem}>
           <FormControl fullWidth>
-            <InputLabel>{t('settingsGroups')}</InputLabel>
-            <Select
+            {/* <InputLabel>{t('settingsGroups')}</InputLabel> */}
+
+            <Autocomplete
+              multiple
+              id="select-groups"
+              options={[{ name: 'select all', id: -999 }, ...Object.values(groups)]}
+              size="small"
+              limitTags={1}
+              getOptionLabel={(option) => {
+                let n;
+                Object.values(groups).forEach((e) => {
+                  if (e.id === option) {
+                    n = e.name;
+                  }
+                });
+                return n ?? option.name;
+              }}
+              disableCloseOnSelect
+              value={groupIds}
+              onChange={(e, v, r, d) => handleChangeInGroupSelect(v)}
+              renderOption={(props, group) => (
+                <li {...props}>
+                  {group.id === -999 ?
+                    (
+                      <div className={classes.selectAll}>
+                        {isGroupsSelectAll ? 'Unselect All' : 'Select All'}
+                      </div>
+                    )
+                    :
+                    (
+                      <div className={classes.rowC}>
+                        <Checkbox size="small" checked={groupIds.includes(group.id)} />
+                        <div className={classes.dropdownText}>
+                          {group.name}
+                        </div>
+                      </div>
+                    )}
+                </li>
+              )}
+              renderInput={(params) => (
+                <TextField {...params} label={t('settingsGroups')} />
+              )}
+            />
+
+            {/* <Select
               label={t('settingsGroups')}
               value={groupIds}
               onChange={(e) => handleChangeInGroupSelect(e)}
@@ -226,7 +382,7 @@ const ReportFilter = ({ children, handleSubmit, handleSchedule, showOnly, ignore
                   </div>
                 </MenuItem>
               ))}
-            </Select>
+            </Select> */}
           </FormControl>
         </div>
       )}
@@ -240,8 +396,8 @@ const ReportFilter = ({ children, handleSubmit, handleSchedule, showOnly, ignore
                 <MenuItem value="yesterday">{t('reportYesterday')}</MenuItem>
                 <MenuItem value="thisWeek">{t('reportThisWeek')}</MenuItem>
                 <MenuItem value="previousWeek">{t('reportPreviousWeek')}</MenuItem>
-                <MenuItem value="thisMonth">{t('reportThisMonth')}</MenuItem>
-                <MenuItem value="previousMonth">{t('reportPreviousMonth')}</MenuItem>
+                {/* <MenuItem value="thisMonth">{t('reportThisMonth')}</MenuItem>
+                <MenuItem value="previousMonth">{t('reportPreviousMonth')}</MenuItem> */}
                 <MenuItem value="custom">{t('reportCustom')}</MenuItem>
               </Select>
             </FormControl>
@@ -297,28 +453,28 @@ const ReportFilter = ({ children, handleSubmit, handleSchedule, showOnly, ignore
             fullWidth
             variant="outlined"
             color="secondary"
-            disabled={disabled}
-            onClick={() => handleClick('json')}
+            disabled={disabled || isExportDisable}
+            onClick={() => handleClick('mail')}
           >
-            <Typography variant="button" noWrap>{t('reportShow')}</Typography>
+            <Typography variant="button" noWrap>{t('reportEmail')}</Typography>
           </Button>
         ) : (
           <SplitButton
             fullWidth
             variant="outlined"
             color="secondary"
-            disabled={disabled}
-            onClick={handleClick}
+            disabled={disabled || isExportDisable}
+            onClick={isExportDisable ? null : handleClick}
             selected={button}
             setSelected={(value) => dispatch(reportsActions.updateButton(value))}
-            options={readonly ? {
+            options={(readonly) ? {
+              mail: t('reportEmail'),
               json: t('reportShow'),
               export: t('reportExport'),
-              mail: t('reportEmail'),
             } : {
+              mail: t('reportEmail'),
               json: t('reportShow'),
               export: t('reportExport'),
-              mail: t('reportEmail'),
               schedule: t('reportSchedule'),
             }}
           />
