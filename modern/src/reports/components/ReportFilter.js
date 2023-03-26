@@ -15,7 +15,9 @@ import { useRestriction } from '../../common/util/permissions';
 import { devicesActions, reportsActions } from '../../store';
 import useReportStyles from '../common/useReportStyles';
 
-const ReportFilter = ({ children, handleSubmit, handleSchedule, showOnly, ignoreDevice, multiDevice, includeGroups }) => {
+const ReportFilter = ({
+  children, handleSubmit, handleSchedule, showOnly, ignoreDevice, multiDevice, includeGroups, fromReplayPage,
+}) => {
   const classes = useReportStyles();
   const dispatch = useDispatch();
   const t = useTranslation();
@@ -300,14 +302,14 @@ const ReportFilter = ({ children, handleSubmit, handleSchedule, showOnly, ignore
               >
 
                 {Object.values(devices).sort((a, b) => a.name.localeCompare(b.name)).map((device) => (
-
-                  <div key={device.id} className={classes.rowC}>
-                    {multiDevice ? (<Checkbox checked={deviceIds?.indexOf(device.id) > -1} />) : null}
-                    <div className={classes.dropdownText}>
-                      {device.name}
+                  <MenuItem key={device.id} value={device.id}>
+                    <div className={classes.rowC}>
+                      {multiDevice ? (<Checkbox checked={deviceIds?.indexOf(device.id) > -1} />) : null}
+                      <div className={classes.dropdownText}>
+                        {device.name}
+                      </div>
                     </div>
-                  </div>
-
+                  </MenuItem>
                 ))}
               </Select>
             )}
@@ -454,9 +456,9 @@ const ReportFilter = ({ children, handleSubmit, handleSchedule, showOnly, ignore
             variant="outlined"
             color="secondary"
             disabled={disabled || isExportDisable}
-            onClick={() => handleClick('mail')}
+            onClick={() => (fromReplayPage ? handleClick('json') : handleClick('mail'))}
           >
-            <Typography variant="button" noWrap>{t('reportEmail')}</Typography>
+            <Typography variant="button" noWrap>{fromReplayPage ? t('reportShow') : t('reportEmail')}</Typography>
           </Button>
         ) : (
           <SplitButton
