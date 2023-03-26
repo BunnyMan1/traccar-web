@@ -301,7 +301,7 @@ const ReportFilter = ({ children, handleSubmit, handleSchedule, showOnly, ignore
 
                 {Object.values(devices).sort((a, b) => a.name.localeCompare(b.name)).map((device) => (
 
-                  <div className={classes.rowC}>
+                  <div key={device.id} className={classes.rowC}>
                     {multiDevice ? (<Checkbox checked={deviceIds?.indexOf(device.id) > -1} />) : null}
                     <div className={classes.dropdownText}>
                       {device.name}
