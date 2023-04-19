@@ -206,20 +206,18 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
                 <CardContent className={classes.content}>
                   <Table size="small" classes={{ root: classes.table }}>
                     <TableBody>
-                      {positionItems.split(',').filter((key) => position.hasOwnProperty(key) || position.attributes.hasOwnProperty(key)).map((key) => (
-                        key === 'totalDistance' ? '' : (
-                          <StatusRow
-                            key={key}
-                            name={positionAttributes.hasOwnProperty(key) ? positionAttributes[key].name : key}
-                            content={(
-                              <PositionValue
-                                position={position}
-                                property={position.hasOwnProperty(key) ? key : null}
-                                attribute={position.hasOwnProperty(key) ? null : key}
-                              />
-                            )}
-                          />
-                        )
+                      {positionItems.split(',').filter((key) => (position.hasOwnProperty(key) || position.attributes.hasOwnProperty(key)) && key !== 'totalDistance').map((key) => (
+                        <StatusRow
+                          key={key}
+                          name={positionAttributes.hasOwnProperty(key) ? positionAttributes[key].name : key}
+                          content={(
+                            <PositionValue
+                              position={position}
+                              property={position.hasOwnProperty(key) ? key : null}
+                              attribute={position.hasOwnProperty(key) ? null : key}
+                            />
+                          )}
+                        />
                       ))}
                     </TableBody>
                   </Table>
