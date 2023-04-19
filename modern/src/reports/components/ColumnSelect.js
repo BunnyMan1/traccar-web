@@ -10,7 +10,8 @@ const ColumnSelect = ({
 }) => {
   const classes = useReportStyles();
   const t = useTranslation();
-
+  const excludeList = ['totalDistance', 'startOdometer', 'endOdometer', 'hours', 'engineHours', 'odometer', 'serviceOdometer', 'tripOdometer'];
+  columns = columns.filter((item) => (!excludeList.includes(item)));
   return (
     <div className={classes.filterItem}>
       <FormControl fullWidth>
@@ -22,12 +23,12 @@ const ColumnSelect = ({
           multiple
         >
           {columnsArray
-            ? columnsArray.map(([key, string]) => (
+            ? columnsArray.map(([key, string]) => (excludeList.includes(key) ? null : (
               <MenuItem key={key} value={key}>{t(string)}</MenuItem>
-            ))
-            : Object.keys(columnsObject).map((key) => (
+            )))
+            : Object.keys(columnsObject).map((key) => (excludeList.includes(key) ? null : (
               <MenuItem key={key} value={key}>{columnsObject[key].name}</MenuItem>
-            ))}
+            )))}
         </Select>
       </FormControl>
     </div>
