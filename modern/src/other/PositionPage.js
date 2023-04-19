@@ -89,13 +89,14 @@ const PositionPage = () => {
                     <TableCell><PositionValue position={item} property={property} /></TableCell>
                   </TableRow>
                 ))}
-                {item && Object.getOwnPropertyNames(item.attributes).map((attribute) => (
-                  <TableRow key={attribute}>
-                    <TableCell>{attribute}</TableCell>
-                    <TableCell><strong>{t(prefixString('position', attribute)) || t(prefixString('device', attribute))}</strong></TableCell>
-                    <TableCell><PositionValue position={item} attribute={attribute} /></TableCell>
-                  </TableRow>
-                ))}
+                {item && Object.getOwnPropertyNames(item.attributes)
+                  .filter((attribute) => (attribute !== 'totalDistance' && attribute !== 'hours')).map((attribute) => (
+                    <TableRow key={attribute}>
+                      <TableCell>{attribute}</TableCell>
+                      <TableCell><strong>{t(prefixString('position', attribute)) || t(prefixString('device', attribute))}</strong></TableCell>
+                      <TableCell><PositionValue position={item} attribute={attribute} /></TableCell>
+                    </TableRow>
+                  ))}
               </TableBody>
             </Table>
           </Paper>
