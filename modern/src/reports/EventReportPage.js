@@ -25,11 +25,12 @@ import MapCamera from '../map/MapCamera';
 import scheduleReport from './common/scheduleReport';
 
 const columnsArray = [
+  ['deviceName', 'reportDeviceName'],
+  ['attributes', 'commandData'],
   ['eventTime', 'positionFixTime'],
   ['type', 'sharedType'],
   ['geofenceId', 'sharedGeofence'],
   ['maintenanceId', 'sharedMaintenance'],
-  ['attributes', 'commandData'],
 ];
 const columnsMap = new Map(columnsArray);
 
@@ -79,9 +80,10 @@ const EventReportPage = () => {
     }
   }, []);
 
-  const handleSubmit = useCatch(async ({ deviceId, from, to, type }) => {
-    const query = new URLSearchParams({ deviceId, from, to });
-    eventTypes.forEach((it) => query.append('type', it));
+  const handleSubmit = useCatch(async ({ deviceIds, groupIds, from, to, type }) => {
+    const query = new URLSearchParams({ from, to });
+    groupIds.forEach((groupId) => query.append('groupId', groupId));
+    deviceIds.forEach((deviceId) => query.append('deviceId', deviceId));
     if (type === 'export') {
       window.location.assign(`/api/reports/events/xlsx?${query.toString()}`);
     } else if (type === 'mail') {
@@ -167,7 +169,7 @@ const EventReportPage = () => {
         )}
         <div className={classes.containerMain}>
           <div className={classes.header}>
-            <ReportFilter handleSubmit={handleSubmit} handleSchedule={handleSchedule}>
+            <ReportFilter handleSubmit={handleSubmit} handleSchedule={handleSchedule} multiDevice includeGroups>
               <div className={classes.filterItem}>
                 <FormControl fullWidth>
                   <InputLabel>{t('reportEventTypes')}</InputLabel>
