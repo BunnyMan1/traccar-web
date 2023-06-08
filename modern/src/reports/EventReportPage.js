@@ -79,8 +79,10 @@ const EventReportPage = () => {
     }
   }, []);
 
-  const handleSubmit = useCatch(async ({ deviceId, from, to, type }) => {
-    const query = new URLSearchParams({ deviceId, from, to });
+  const handleSubmit = useCatch(async ({ deviceIds, groupIds, from, to, type }) => {
+    const query = new URLSearchParams({ from, to });
+    groupIds.forEach((groupId) => query.append('groupId', groupId));
+    deviceIds.forEach((deviceId) => query.append('deviceId', deviceId));
     eventTypes.forEach((it) => query.append('type', it));
     if (type === 'export') {
       window.location.assign(`/api/reports/events/xlsx?${query.toString()}`);
@@ -167,7 +169,7 @@ const EventReportPage = () => {
         )}
         <div className={classes.containerMain}>
           <div className={classes.header}>
-            <ReportFilter handleSubmit={handleSubmit} handleSchedule={handleSchedule}>
+            <ReportFilter handleSubmit={handleSubmit} handleSchedule={handleSchedule} multiDevice includeGroups>
               <div className={classes.filterItem}>
                 <FormControl fullWidth>
                   <InputLabel>{t('reportEventTypes')}</InputLabel>
