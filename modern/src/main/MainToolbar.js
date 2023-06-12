@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import {
-  Toolbar, IconButton, OutlinedInput, InputAdornment, Popover, FormControl, InputLabel, Select, MenuItem, FormGroup, FormControlLabel, Checkbox, Badge, ListItemButton, ListItemText, Tooltip,
+  Toolbar, IconButton, OutlinedInput, InputAdornment, Popover, FormControl, InputLabel, Select, MenuItem, FormGroup, FormControlLabel, Checkbox, Badge, ListItemButton, ListItemText, Tooltip, Button,
 } from '@mui/material';
 import { makeStyles, useTheme } from '@mui/styles';
 import MapIcon from '@mui/icons-material/Map';
@@ -12,6 +12,7 @@ import TuneIcon from '@mui/icons-material/Tune';
 import { useTranslation } from '../common/components/LocalizationProvider';
 import { useDeviceReadonly } from '../common/util/permissions';
 import DeviceRow from './DeviceRow';
+import { useCatch } from '../reactHelper';
 
 const useStyles = makeStyles((theme) => ({
   toolbar: {
@@ -122,7 +123,11 @@ const MainToolbar = ({
     items = items.map((i) => (items.indexOf(i) !== items.length - 1 ? `${i.name}, ` : i.name));
     return items;
   }
-
+  const handleButtonClick = useCatch(async () => {
+    const query = new URLSearchParams({ from: '0001-01-01T00:00:00.000Z', to: new Date().toISOString(), daily: false });
+    filteredDevices.forEach((deviceId) => { query.append('deviceId', deviceId.id); });
+    window.location.assign(`/api/devices/xlsx?${query.toString()}`);
+  });
   return (
     <Toolbar ref={toolbarRef} className={classes.toolbar}>
       <IconButton edge="start" onClick={() => setDevicesOpen(!devicesOpen)}>
@@ -258,6 +263,7 @@ const MainToolbar = ({
               label={t('sharedFilterMap')}
             />
           </FormGroup>
+          <Button variant="outlined" onClick={handleButtonClick}>Export Devices</Button>
         </div>
       </Popover>
       <IconButton edge="end" onClick={() => navigate('/settings/device')} disabled={deviceReadonly}>
