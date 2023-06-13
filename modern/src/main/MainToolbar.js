@@ -123,11 +123,13 @@ const MainToolbar = ({
     items = items.map((i) => (items.indexOf(i) !== items.length - 1 ? `${i.name}, ` : i.name));
     return items;
   }
+
   const handleButtonClick = useCatch(async () => {
     const query = new URLSearchParams({ from: '0001-01-01T00:00:00.000Z', to: new Date().toISOString(), daily: false });
-    filteredDevices.forEach((deviceId) => { query.append('deviceId', deviceId.id); });
+    filteredDevices.forEach((device) => { query.append('deviceId', device.id); });
     window.location.assign(`/api/devices/xlsx?${query.toString()}`);
   });
+
   return (
     <Toolbar ref={toolbarRef} className={classes.toolbar}>
       <IconButton edge="start" onClick={() => setDevicesOpen(!devicesOpen)}>
