@@ -125,7 +125,7 @@ const MainToolbar = ({
   }
 
   const handleButtonClick = useCatch(async () => {
-    const query = new URLSearchParams({ from: '0001-01-01T00:00:00.000Z', to: new Date().toISOString(), daily: false });
+    const query = new URLSearchParams({ });
     filteredDevices.forEach((device) => { query.append('deviceId', device.id); });
     window.location.assign(`/api/devices/xlsx?${query.toString()}`);
   });
