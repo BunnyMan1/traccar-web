@@ -75,8 +75,24 @@ const ReportFilter = ({
       clearTimeout(timer);
     }, 30000);
   };
+    // Step 1: Add state to keep track of the selected "from" date
+  const [selectedFrom, setSelectedFrom] = useState(moment().startOf('day'));
+
+  // Step 2: Handle changes in the "from" date and adjust the "to" date accordingly
+  const handleFromDateChange = (value) => {
+    const newFromDate = moment(value, moment.HTML5_FMT.DATETIME_LOCAL);
+    setSelectedFrom(newFromDate);
+    // Automatically adjust the "to" date to be one month beyond the new "from" date
+    const newToDate = newFromDate.clone().add(1, 'month');
+    dispatch(reportsActions.updateFrom(value)); // Update the Redux state with the new "from" value
+    dispatch(reportsActions.updateTo(newToDate.format(moment.HTML5_FMT.DATETIME_LOCAL))); // Update the Redux state with the new "to" value
+  };
 
   const handleClick = (type) => {
+    let selectedFromDate; // Declare selectedFromDate variable here
+    let selectedToDate; // Declare selectedToDate variable here
+    let diffInMonths;
+    let adjustedToDate;
     if (type === 'schedule') {
       handleSchedule(deviceIds, groupIds, {
         description,
@@ -84,45 +100,56 @@ const ReportFilter = ({
         attributes: {},
       });
     } else {
-      let selectedFrom;
-      let selectedTo;
       switch (period) {
         case 'today':
-          selectedFrom = moment().startOf('day');
-          selectedTo = moment().endOf('day');
+          selectedFromDate = moment().startOf('day');
+          selectedToDate = moment().endOf('day');
           break;
         case 'yesterday':
-          selectedFrom = moment().subtract(1, 'day').startOf('day');
-          selectedTo = moment().subtract(1, 'day').endOf('day');
+          selectedFromDate = moment().subtract(1, 'day').startOf('day');
+          selectedToDate = moment().subtract(1, 'day').endOf('day');
           break;
         case 'thisWeek':
-          selectedFrom = moment().startOf('week');
-          selectedTo = moment().endOf('week');
+          selectedFromDate = moment().startOf('week');
+          selectedToDate = moment().endOf('week');
           break;
         case 'previousWeek':
-          selectedFrom = moment().subtract(1, 'week').startOf('week');
-          selectedTo = moment().subtract(1, 'week').endOf('week');
+          selectedFromDate = moment().subtract(1, 'week').startOf('week');
+          selectedToDate = moment().subtract(1, 'week').endOf('week');
           break;
         case 'thisMonth':
-          selectedFrom = moment().startOf('month');
-          selectedTo = moment().endOf('month');
+          selectedFromDate = moment().startOf('month');
+          selectedToDate = moment().endOf('month');
           break;
         case 'previousMonth':
-          selectedFrom = moment().subtract(1, 'month').startOf('month');
-          selectedTo = moment().subtract(1, 'month').endOf('month');
+          selectedFromDate = moment().subtract(1, 'month').startOf('month');
+          selectedToDate = moment().subtract(1, 'month').endOf('month');
+          break;
+        case 'custom':
+          // In case of 'custom', use the value directly from the 'TextField' as the "from" date
+          selectedFromDate = moment(from, moment.HTML5_FMT.DATETIME_LOCAL);
+          // If "to" date is beyond one month from "from" date, adjust it to be one month beyond the "from" date
+          selectedToDate = moment(to, moment.HTML5_FMT.DATETIME_LOCAL);
+          diffInMonths = selectedToDate.diff(selectedFromDate, 'months', true);
+          adjustedToDate = diffInMonths > 1 ? selectedFromDate.clone().add(1, 'month') : selectedToDate;
+
+          // Update the Redux state and local state with the new "from" value
+          dispatch(reportsActions.updateFrom(selectedFromDate.toISOString()));
+          setSelectedFrom(selectedFromDate);
+
+          // Update the Redux state with the new "to" value
+          dispatch(reportsActions.updateTo(adjustedToDate.toISOString()));
           break;
         default:
-          selectedFrom = moment(from, moment.HTML5_FMT.DATETIME_LOCAL);
-          selectedTo = moment(to, moment.HTML5_FMT.DATETIME_LOCAL);
           break;
       }
-      if (selectedTo.diff(selectedFrom, 'minutes') > 10080) {
-        // show snackbar.
-        setSnackbarMessage('Difference between from and to dates should be less than one week.');
-        setSnackbarSeverity('warning');
-        setIsShowErrorSnackbar(true);
-        return;
-      }
+      // if (selectedToDate.diff(selectedFrom, 'minutes') > 10080) {
+      //   // show snackbar.
+      //   setSnackbarMessage('Difference between from and to dates should be less than one week.');
+      //   setSnackbarSeverity('warning');
+      //   setIsShowErrorSnackbar(true);
+      //   return;
+      // }
       // console.log(selectedFrom);
       // console.log(selectedTo);
 
@@ -130,8 +157,8 @@ const ReportFilter = ({
         deviceId,
         deviceIds,
         groupIds,
-        from: selectedFrom.toISOString(),
-        to: selectedTo.toISOString(),
+        from: selectedFromDate ? selectedFromDate.toISOString() : selectedFrom.toISOString(), // Use the new selectedFromDate if available, otherwise use the previous selectedFrom
+        to: selectedToDate.toISOString(),
         calendarId,
         type,
       });
@@ -410,7 +437,7 @@ const ReportFilter = ({
                 label={t('reportFrom')}
                 type="datetime-local"
                 value={from}
-                onChange={(e) => dispatch(reportsActions.updateFrom(e.target.value))}
+                onChange={(e) => handleFromDateChange(e.target.value)} // Use the new function to handle "from" date changes
                 fullWidth
               />
             </div>
@@ -423,6 +450,9 @@ const ReportFilter = ({
                 value={to}
                 onChange={(e) => dispatch(reportsActions.updateTo(e.target.value))}
                 fullWidth
+                inputProps={{
+                  max: moment(selectedFrom).add(1, 'month').format(moment.HTML5_FMT.DATETIME_LOCAL), // Use the adjusted "to" date value
+                }}
               />
             </div>
           )}
