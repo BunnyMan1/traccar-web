@@ -23,6 +23,7 @@ import PublishIcon from '@mui/icons-material/Publish';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PendingIcon from '@mui/icons-material/Pending';
+import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
 
 import { useTranslation } from './LocalizationProvider';
 import RemoveDialog from './RemoveDialog';
@@ -143,6 +144,18 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
     setRemoving(false);
   });
 
+  const redirectToAdminPanel = async (device) => {
+
+    const redirectURL = `https://dev-nconnect.narayanagroup.com/bus-tracking/mapping/feeds/${device}`;
+    
+    // localhost:redirectURL = `http://localhost:3000/bus-tracking/mapping/feeds/${device}`
+    // prod:redirectURL = `https://nconnect.narayanagroup.com/bus-tracking/mapping/feeds/${device}`;
+    // dev:redirectURL = `https://dev-nconnect.narayanagroup.com/bus-tracking/mapping/feeds/${device}`;
+
+    // Redirect to the specified URL
+    window.open(redirectURL, '_blank');
+  };
+
   const handleGeofence = useCatchCallback(async () => {
     const newItem = {
       name: '',
@@ -233,6 +246,13 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
                 >
                   <PendingIcon />
                 </IconButton>
+                {device.attributes.hasCamera ? (
+                <IconButton
+                  onClick={() => redirectToAdminPanel(device.name)}
+                >
+                  <PlayCircleOutlineIcon />
+                </IconButton>
+              ) : null}
                 <IconButton
                   onClick={() => navigate('/replay')}
                   disabled={disableActions || !position}

@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import dayjs from 'dayjs';
 
-export default (keyword, filter, filterSort, filterMap, positions, setFilteredDevices, setFilteredPositions) => {
+export default (keyword, filter, filterSort, filterMap, positions, filterByCamera, setFilteredDevices, setFilteredPositions) => {
   const groups = useSelector((state) => state.groups.items);
   const devices = useSelector((state) => state.devices.items);
 
@@ -38,9 +38,12 @@ export default (keyword, filter, filterSort, filterMap, positions, setFilteredDe
       default:
         break;
     }
-    setFilteredDevices(filtered);
+    
+    let result = filterByCamera ? filtered.filter((device) => device.attributes.hasCamera === true) : filterByCamera === false ? filtered.filter((device) => device.attributes.hasCamera === false) : filtered;
+    // setFilteredDevices(filtered);
+    setFilteredDevices(result);
     setFilteredPositions(filterMap
       ? filtered.map((device) => positions[device.id]).filter(Boolean)
       : Object.values(positions));
-  }, [keyword, filter, filterSort, filterMap, groups, devices, positions, setFilteredDevices, setFilteredPositions]);
+  }, [keyword, filter, filterSort, filterMap, groups, devices, positions, filterByCamera, setFilteredDevices, setFilteredPositions]);
 };
