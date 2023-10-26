@@ -11,6 +11,7 @@ import BatteryCharging60Icon from '@mui/icons-material/BatteryCharging60';
 import Battery20Icon from '@mui/icons-material/Battery20';
 import BatteryCharging20Icon from '@mui/icons-material/BatteryCharging20';
 import ErrorIcon from '@mui/icons-material/Error';
+import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
 import moment from 'moment';
 import { devicesActions } from '../store';
 import {
@@ -126,6 +127,11 @@ const DeviceRow = ({ data, index, style }) => {
                 </IconButton>
               </Tooltip>
             )}
+            {item.attributes.hasCamera ? (
+              <IconButton>
+                <PlayCircleOutlineIcon />
+              </IconButton>
+            ) : null}
             {position.attributes.hasOwnProperty('batteryLevel') && (
               <Tooltip title={`${t('positionBatteryLevel')}: ${formatPercentage(position.attributes.batteryLevel)}`}>
                 <IconButton size="small">

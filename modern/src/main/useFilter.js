@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import moment from 'moment';
 
-export default (keyword, filter, filterSort, filterMap, positions, setFilteredDevices, setFilteredPositions) => {
+export default (keyword, filter, filterSort, filterMap, positions, filterByCamera, setFilteredDevices, setFilteredPositions) => {
   const groups = useSelector((state) => state.groups.items);
   const devices = useSelector((state) => state.devices.items);
   // const positions = useSelector((state) => state.session.positions);
@@ -51,9 +51,10 @@ export default (keyword, filter, filterSort, filterMap, positions, setFilteredDe
       default:
         break;
     }
-    setFilteredDevices(filtered);
+    // Conditionally filters 'devices' based on the 'hasCamera' attribute and the 'filterByCamera' flag.
+    setFilteredDevices(filterByCamera === 'All' ? filtered : filterByCamera === 'Has Camera' ? filtered.filter((device) => device.attributes.hasCamera === true) : filtered.filter((device) => device.attributes.hasCamera === false));
     setFilteredPositions(filterMap
       ? filtered.map((device) => positions[device.id]).filter(Boolean)
       : Object.values(positions));
-  }, [keyword, filter, filterSort, filterMap, groups, devices, positions, setFilteredDevices, setFilteredPositions]);
+  }, [keyword, filter, filterSort, filterMap, groups, devices, positions, filterByCamera, setFilteredDevices, setFilteredPositions]);
 };

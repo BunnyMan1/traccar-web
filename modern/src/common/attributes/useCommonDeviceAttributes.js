@@ -1,6 +1,10 @@
 import { useMemo } from 'react';
 
 export default (t) => useMemo(() => ({
+  hasCamera: {
+    name: t('attributeHasCamera'),
+    type: 'boolean',
+  },
   speedLimit: {
     name: t('attributeSpeedLimit'),
     type: 'number',
