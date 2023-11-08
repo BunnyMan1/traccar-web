@@ -142,9 +142,9 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
     setRemoving(false);
   });
 
-  // redirect to admin panel
+  // Redirect to admin panel
   const redirectToAdminPanel = async (device) => {
-    const redirectURL = process.env.REACT_APP_ADMIN_PANEL_REDIRECT_URL + device;
+    const redirectURL = `https://nconnect.narayanagroup.com/bus-tracking/mapping/feeds/${device}`;
 
     // Redirect to the specified URL
     window.open(redirectURL, '_blank');
