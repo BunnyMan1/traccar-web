@@ -54,6 +54,8 @@ const MainToolbar = ({
   setFilter,
   filterSort,
   setFilterSort,
+  filterByCamera,
+  setFilterByCamera,
   filterMap,
   setFilterMap,
 }) => {
@@ -257,6 +259,20 @@ const MainToolbar = ({
               <MenuItem value="">{'\u00a0'}</MenuItem>
               <MenuItem value="name">{t('sharedName')}</MenuItem>
               <MenuItem value="lastUpdate">{t('deviceLastUpdate')}</MenuItem>
+            </Select>
+          </FormControl>
+          {/* search by camera filter */}
+          <FormControl>
+            <InputLabel>{t('sharedFilterByCamera')}</InputLabel>
+            <Select
+              label={t('sharedFilterByCamera')}
+              value={filterByCamera}
+              onChange={(e) => setFilterByCamera(e.target.value)}
+              displayEmpty
+            >
+              <MenuItem value="All">All</MenuItem>
+              <MenuItem value="Has Camera">{t('sharedHasCamera')}</MenuItem>
+              <MenuItem value="Has No Camera">{t('sharedHasNoCamera')}</MenuItem>
             </Select>
           </FormControl>
           <FormGroup>

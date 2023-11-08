@@ -1,4 +1,6 @@
 {
+    "sharedHasCamera":"Has Camera",
+    "sharedHasNoCamera":"Has No Camera",
     "sharedLoading": "Loading...",
     "sharedHide": "Hide",
     "sharedSave": "Save",
@@ -71,6 +73,7 @@
     "sharedSearchDevices": "Search Devices",
     "sharedSortBy": "Sort By",
     "sharedFilterMap": "Filter on Map",
+    "sharedFilterByCamera": "Filter By Camera",
     "sharedSelectFile": "Select File",
     "sharedPhone": "Phone",
     "sharedRequired": "Required",
@@ -115,6 +118,7 @@
     "attributeShowGeofences": "Show Geofences",
     "attributeSpeedLimit": "Speed Limit",
     "attributeFuelDropThreshold": "Fuel Drop Threshold",
+    "attributeHasCamera": "Has Camera",
     "attributeFuelIncreaseThreshold": "Fuel Increase Threshold",
     "attributePolylineDistance": "Polyline Distance",
     "attributeReportIgnoreOdometer": "Report: Ignore Odometer",

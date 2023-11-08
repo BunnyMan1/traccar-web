@@ -86,6 +86,7 @@ const MainPage = () => {
   });
   const [filterSort, setFilterSort] = usePersistedState('filterSort', '');
   const [filterMap, setFilterMap] = usePersistedState('filterMap', false);
+  const [filterByCamera, setFilterByCamera] = usePersistedState('filterByCamera', false);
 
   const [devicesOpen, setDevicesOpen] = useState(desktop);
   const [eventsOpen, setEventsOpen] = useState(false);
@@ -98,7 +99,7 @@ const MainPage = () => {
     }
   }, [desktop, mapOnSelect, selectedDeviceId]);
 
-  useFilter(keyword, filter, filterSort, filterMap, positions, setFilteredDevices, setFilteredPositions);
+  useFilter(keyword, filter, filterSort, filterMap, positions, filterByCamera, setFilteredDevices, setFilteredPositions);
 
   return (
     <div className={classes.root}>
@@ -120,6 +121,8 @@ const MainPage = () => {
             filter={filter}
             setFilter={setFilter}
             filterSort={filterSort}
+            filterByCamera={filterByCamera}
+            setFilterByCamera={setFilterByCamera}
             setFilterSort={setFilterSort}
             filterMap={filterMap}
             setFilterMap={setFilterMap}
