@@ -1,21 +1,22 @@
 import React from 'react';
 import {
-  Divider, List, ListItemButton, ListItemIcon, ListItemText,
+  // Divider,
+  List, ListItemButton, ListItemIcon, ListItemText,
 } from '@mui/material';
-import StarIcon from '@mui/icons-material/Star';
+// import StarIcon from '@mui/icons-material/Star';
 import TimelineIcon from '@mui/icons-material/Timeline';
 import PauseCircleFilledIcon from '@mui/icons-material/PauseCircleFilled';
 import PlayCircleFilledIcon from '@mui/icons-material/PlayCircleFilled';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 import FormatListBulletedIcon from '@mui/icons-material/FormatListBulleted';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
-import BarChartIcon from '@mui/icons-material/BarChart';
+// import BarChartIcon from '@mui/icons-material/BarChart';
 import RouteIcon from '@mui/icons-material/Route';
-import EventRepeatIcon from '@mui/icons-material/EventRepeat';
-import NotesIcon from '@mui/icons-material/Notes';
+// import EventRepeatIcon from '@mui/icons-material/EventRepeat';
+// import NotesIcon from '@mui/icons-material/Notes';
 import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from '../../common/components/LocalizationProvider';
-import { useAdministrator, useRestriction } from '../../common/util/permissions';
+// import { useAdministrator, useRestriction } from '../../common/util/permissions';
 
 const MenuItem = ({
   title, link, icon, selected,
@@ -30,18 +31,18 @@ const ReportsMenu = () => {
   const t = useTranslation();
   const location = useLocation();
 
-  const admin = useAdministrator();
-  const readonly = useRestriction('readonly');
+  // const admin = useAdministrator();
+  // const readonly = useRestriction('readonly');
 
   return (
     <>
       <List>
-        <MenuItem
+        {/* <MenuItem
           title={t('reportCombined')}
           link="/reports/combined"
           icon={<StarIcon />}
           selected={location.pathname === '/reports/combined'}
-        />
+        /> */}
         <MenuItem
           title={t('reportRoute')}
           link="/reports/route"
@@ -84,7 +85,7 @@ const ReportsMenu = () => {
           icon={<RouteIcon />}
         />
       </List>
-      <Divider />
+      {/* <Divider />
       <List>
         <MenuItem
           title={t('sharedLogs')}
@@ -108,7 +109,7 @@ const ReportsMenu = () => {
             selected={location.pathname === '/reports/statistics'}
           />
         )}
-      </List>
+      </List> */}
     </>
   );
 };

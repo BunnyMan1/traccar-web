@@ -91,7 +91,7 @@ const PositionPage = () => {
                     <TableCell><PositionValue position={item} property={property} /></TableCell>
                   </TableRow>
                 ))}
-                {item && Object.getOwnPropertyNames(item.attributes).map((attribute) => (
+                {item && Object.getOwnPropertyNames(item.attributes).filter((attribute) => (attribute !== 'totalDistance' && attribute !== 'hours')).map((attribute) => (
                   <TableRow key={attribute}>
                     <TableCell>{attribute}</TableCell>
                     <TableCell><strong>{positionAttributes[attribute]?.name}</strong></TableCell>

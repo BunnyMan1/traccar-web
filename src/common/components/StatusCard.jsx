@@ -2,6 +2,11 @@ import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import Draggable from 'react-draggable';
+
+// * CUSTOM CODE START * //
+import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
+// * CUSTOM CODE END * //
+
 import {
   Card,
   CardContent,
@@ -127,7 +132,11 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
   const deviceImage = device?.attributes?.deviceImage;
 
   const positionAttributes = usePositionAttributes(t);
-  const positionItems = useAttributePreference('positionItems', 'fixTime,address,speed,totalDistance');
+
+  // * CUSTOM CODE START * //
+  // const positionItems = useAttributePreference('positionItems', 'fixTime,address,speed,totalDistance');
+  const positionItems = useAttributePreference('positionItems', 'speed,address,totalDistance,course,motion');
+  // * CUSTOM CODE END * //
 
   const [anchorEl, setAnchorEl] = useState(null);
 
@@ -144,6 +153,18 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
     }
     setRemoving(false);
   });
+
+  // * CUSTOM CODE START * //
+
+  // Redirect to admin panel
+  const redirectToAdminPanel = async (device) => {
+    const redirectURL = `https://nconnect.narayanagroup.com/bus-tracking/mapping/feeds/${device}`;
+
+    // Redirect to the specified URL
+    window.open(redirectURL, '_blank');
+  };
+
+  // * CUSTOM CODE END * //
 
   const handleGeofence = useCatchCallback(async () => {
     const newItem = {
@@ -210,7 +231,7 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
                 <CardContent className={classes.content}>
                   <Table size="small" classes={{ root: classes.table }}>
                     <TableBody>
-                      {positionItems.split(',').filter((key) => position.hasOwnProperty(key) || position.attributes.hasOwnProperty(key)).map((key) => (
+                      {positionItems.split(',').filter((key) => (position.hasOwnProperty(key) || position.attributes.hasOwnProperty(key)) && key !== 'totalDistance').map((key) => (
                         <StatusRow
                           key={key}
                           name={positionAttributes[key]?.name || key}
@@ -235,6 +256,13 @@ const StatusCard = ({ deviceId, position, onClose, disableActions, desktopPaddin
                 >
                   <PendingIcon />
                 </IconButton>
+                {device.attributes.hasCamera ? (
+                  <IconButton
+                    onClick={() => redirectToAdminPanel(device.name)}
+                  >
+                    <PlayCircleOutlineIcon />
+                  </IconButton>
+                ) : null}
                 <IconButton
                   onClick={() => navigate('/replay')}
                   disabled={disableActions || !position}

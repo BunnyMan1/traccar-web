@@ -13,6 +13,11 @@ import BatteryCharging20Icon from '@mui/icons-material/BatteryCharging20';
 import ErrorIcon from '@mui/icons-material/Error';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
+
+// * CUSTOM CODE START * //
+import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutline';
+// * CUSTOM CODE END * //
+
 import { devicesActions } from '../store';
 import {
   formatAlarm, formatBoolean, formatPercentage, formatStatus, getStatusColor,
@@ -116,6 +121,11 @@ const DeviceRow = ({ data, index, style }) => {
                 </IconButton>
               </Tooltip>
             )}
+            {item.attributes.hasCamera ? (
+              <IconButton>
+                <PlayCircleOutlineIcon />
+              </IconButton>
+            ) : null}
             {position.attributes.hasOwnProperty('batteryLevel') && (
               <Tooltip title={`${t('positionBatteryLevel')}: ${formatPercentage(position.attributes.batteryLevel)}`}>
                 <IconButton size="small">

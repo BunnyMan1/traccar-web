@@ -46,6 +46,10 @@ const MapPositions = ({ positions, onClick, showStatus, selectedPosition, titleF
       color: showStatus ? position.attributes.color || getStatusColor(device.status) : 'neutral',
       rotation: position.course,
       direction: showDirection,
+
+      // * CUSTOM CODE START * //
+      motion: position.attributes.motion,
+      // * CUSTOM CODE END * //
     };
   };
 

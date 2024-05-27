@@ -214,7 +214,9 @@ const ReplayPage = () => {
               </div>
             </>
           ) : (
-            <ReportFilter handleSubmit={handleSubmit} fullScreen showOnly />
+            // * CUSTOM CODE START (Added `fromReplayPage`) * //
+            <ReportFilter handleSubmit={handleSubmit} fullScreen showOnly fromReplayPage />
+            // * CUSTOM CODE END * //
           )}
         </Paper>
       </div>

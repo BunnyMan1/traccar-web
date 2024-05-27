@@ -46,4 +46,24 @@ export default makeStyles((theme) => ({
     flexGrow: 1,
     overflow: 'hidden',
   },
+
+  // * CUSTOM CODE START * //
+  selectAll: {
+    fontSize: '12px',
+    fontWeight: 400,
+  },
+  rowC: {
+    display: 'flex',
+    flexDirection: 'row',
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  dropdownText: {
+    display: 'flex',
+    flexDirection: 'row',
+    flexGrow: 1,
+  },
+  // * CUSTOM CODE END * //
+
 }));
