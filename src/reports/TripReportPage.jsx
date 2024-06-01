@@ -27,6 +27,11 @@ import MapGeofence from '../map/MapGeofence';
 import scheduleReport from './common/scheduleReport';
 
 const columnsArray = [
+
+  // * CUSTOM CODE START * //
+  ['deviceName', 'reportDeviceName'],
+  // * CUSTOM CODE END * //
+
   ['startTime', 'reportStartTime'],
   ['startOdometer', 'reportStartOdometer'],
   ['startAddress', 'reportStartAddress'],
@@ -52,7 +57,10 @@ const TripReportPage = () => {
   const volumeUnit = useAttributePreference('volumeUnit');
   const hours12 = usePreference('twelveHourFormat');
 
-  const [columns, setColumns] = usePersistedState('tripColumns', ['startTime', 'endTime', 'distance', 'averageSpeed']);
+  // * CUSTOM CODE START (Added `deviceName`) * //
+  const [columns, setColumns] = usePersistedState('tripColumns', ['deviceName', 'startTime', 'endTime', 'distance', 'averageSpeed']);
+  // * CUSTOM CODE END * //
+
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -93,8 +101,15 @@ const TripReportPage = () => {
     }
   }, [selectedItem]);
 
-  const handleSubmit = useCatch(async ({ deviceId, from, to, type }) => {
-    const query = new URLSearchParams({ deviceId, from, to });
+  // * CUSTOM CODE START * //
+  // const handleSubmit = useCatch(async ({ deviceId, from, to, type }) => {
+  //   const query = new URLSearchParams({ deviceId, from, to });
+  const handleSubmit = useCatch(async ({ deviceIds, groupIds, from, to, type }) => {
+    const query = new URLSearchParams({ from, to });
+    groupIds.forEach((groupId) => query.append('groupId', groupId));
+    deviceIds.forEach((deviceId) => query.append('deviceId', deviceId));
+    // * CUSTOM CODE END * //
+
     if (type === 'export') {
       window.location.assign(`/api/reports/trips/xlsx?${query.toString()}`);
     } else if (type === 'mail') {
@@ -173,7 +188,7 @@ const TripReportPage = () => {
         )}
         <div className={classes.containerMain}>
           <div className={classes.header}>
-            <ReportFilter handleSubmit={handleSubmit} handleSchedule={handleSchedule}>
+            <ReportFilter handleSubmit={handleSubmit} handleSchedule={handleSchedule} multiDevice includeGroups>
               <ColumnSelect columns={columns} setColumns={setColumns} columnsArray={columnsArray} />
             </ReportFilter>
           </div>

@@ -133,7 +133,7 @@ const RouteReportPage = () => {
               <TableRow>
                 <TableCell className={classes.columnAction} />
                 <TableCell>{t('sharedDevice')}</TableCell>
-                {columns.map((key) => (<TableCell key={key}>{positionAttributes[key]?.name || key}</TableCell>))}
+                {columns.filter((key) => (key !== 'totalDistance' && key !== 'odometer' && key !== 'serviceOdometer' && key !== 'tripOdometer')).map((key) => (<TableCell key={key}>{positionAttributes[key]?.name || key}</TableCell>))}
               </TableRow>
             </TableHead>
             <TableBody>
@@ -151,7 +151,7 @@ const RouteReportPage = () => {
                     )}
                   </TableCell>
                   <TableCell>{devices[item.deviceId].name}</TableCell>
-                  {columns.map((key) => (
+                  {columns.filter((key) => (key !== 'totalDistance' && key !== 'odometer' && key !== 'serviceOdometer' && key !== 'tripOdometer')).map((key) => (
                     <TableCell key={key}>
                       <PositionValue
                         position={item}

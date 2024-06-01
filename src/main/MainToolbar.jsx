@@ -3,6 +3,9 @@ import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import {
   Toolbar, IconButton, OutlinedInput, InputAdornment, Popover, FormControl, InputLabel, Select, MenuItem, FormGroup, FormControlLabel, Checkbox, Badge, ListItemButton, ListItemText, Tooltip,
+  // * CUSTOM CODE START * //
+  Button,
+  // * CUSTOM CODE END * //
 } from '@mui/material';
 import { makeStyles, useTheme } from '@mui/styles';
 import MapIcon from '@mui/icons-material/Map';
@@ -12,6 +15,10 @@ import TuneIcon from '@mui/icons-material/Tune';
 import { useTranslation } from '../common/components/LocalizationProvider';
 import { useDeviceReadonly } from '../common/util/permissions';
 import DeviceRow from './DeviceRow';
+
+// * CUSTOM CODE START * //
+import { useCatch } from '../reactHelper';
+// * CUSTOM CODE END * //
 
 const useStyles = makeStyles((theme) => ({
   toolbar: {
@@ -25,6 +32,27 @@ const useStyles = makeStyles((theme) => ({
     gap: theme.spacing(2),
     width: theme.dimensions.drawerWidthTablet,
   },
+
+  // * CUSTOM CODE START * //
+
+  selectAll: {
+    fontSize: '12px',
+    fontWeight: 400,
+  },
+  rowC: {
+    display: 'flex',
+    flexDirection: 'row',
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  dropdownText: {
+    display: 'flex',
+    flexDirection: 'row',
+    flexGrow: 1,
+  },
+
+  // * CUSTOM CODE END * //
 }));
 
 const MainToolbar = ({
@@ -37,6 +65,14 @@ const MainToolbar = ({
   setFilter,
   filterSort,
   setFilterSort,
+
+  // * CUSTOM CODE START * //
+
+  filterByCamera,
+  setFilterByCamera,
+
+  // * CUSTOM CODE END * //
+
   filterMap,
   setFilterMap,
 }) => {
@@ -50,12 +86,77 @@ const MainToolbar = ({
   const groups = useSelector((state) => state.groups.items);
   const devices = useSelector((state) => state.devices.items);
 
+  // * CUSTOM CODE START * //
+  const positions = useSelector((state) => state.session.positions);
+  // * CUSTOM CODE END * //
+
   const toolbarRef = useRef();
   const inputRef = useRef();
   const [filterAnchorEl, setFilterAnchorEl] = useState(null);
   const [devicesAnchorEl, setDevicesAnchorEl] = useState(null);
 
+  // * CUSTOM CODE START * //
+  const [isGroupsSelectAll, setIsGroupsSelectAll] = useState(false);
+  // * CUSTOM CODE END * //
+
   const deviceStatusCount = (status) => Object.values(devices).filter((d) => d.status === status).length;
+
+  // * CUSTOM CODE START * //
+  const deviceMovingCount = (status) => {
+    if (status === 'all') return Object.values(devices).length;
+
+    if (Object.values(positions).length === 0 && status === 'no-motion') return Object.values(devices).length;
+
+    return Object.values(positions).filter((p) => {
+      if (status === 'motion') return p.attributes?.motion === true;
+
+      return !p.attributes || p.attributes.motion === false;
+    }).length;
+  };
+
+  /// Function to handle changes made to Groups dropdown by the user.
+  function handleChangeInGroupSelect(e) {
+    // Check the current event item's target's value.
+    // if it contains 'all' user has clicked on select all option.
+    // if not then user has clicked on something else.
+    if (e.target.value.includes('all')) {
+      // Check if select all is already tapped
+      //  if true => `unselect all` action should be performed.
+      //  if false => `select all` action should be performed.
+      if (isGroupsSelectAll) {
+        // unselect all case.
+        setFilter({ ...filter, groups: [] });
+        // setting state to false ==> unselect done.
+        setIsGroupsSelectAll(false);
+        return;
+      }
+
+      // select all case.
+      const ids = [];
+      Object.keys(groups).forEach((d) => ids.push(groups[d].id));
+      setFilter({ ...filter, groups: ids });
+      setIsGroupsSelectAll(true);
+      return;
+    }
+
+    setFilter({ ...filter, groups: e.target.value });
+
+    setIsGroupsSelectAll(false);
+  }
+
+  function renderValueForGroupsDropdown(e) {
+    let items = Object.values(groups).filter((g) => e.includes(g.id));
+    items = items.map((i) => (items.indexOf(i) !== items.length - 1 ? `${i.name}, ` : i.name));
+    return items;
+  }
+
+  const handleButtonClick = useCatch(async () => {
+    const query = new URLSearchParams({});
+    filteredDevices.forEach((device) => { query.append('deviceId', device.id); });
+    window.location.assign(`/api/devices/xlsx?${query.toString()}`);
+  });
+
+  // * CUSTOM CODE END * //
 
   return (
     <Toolbar ref={toolbarRef} className={classes.toolbar}>
@@ -70,13 +171,15 @@ const MainToolbar = ({
         onFocus={() => setDevicesAnchorEl(toolbarRef.current)}
         onBlur={() => setDevicesAnchorEl(null)}
         endAdornment={(
+          // * CUSTOM CODE START * //
           <InputAdornment position="end">
             <IconButton size="small" edge="end" onClick={() => setFilterAnchorEl(inputRef.current)}>
-              <Badge color="info" variant="dot" invisible={!filter.statuses.length && !filter.groups.length}>
+              <Badge color="info" variant="dot" invisible={!filter.statuses.length && !filter.groups.length && filter.motion === 'all'}>
                 <TuneIcon fontSize="small" />
               </Badge>
             </IconButton>
           </InputAdornment>
+          // * CUSTOM CODE END * //
         )}
         size="small"
         fullWidth
@@ -131,19 +234,47 @@ const MainToolbar = ({
             >
               <MenuItem value="online">{`${t('deviceStatusOnline')} (${deviceStatusCount('online')})`}</MenuItem>
               <MenuItem value="offline">{`${t('deviceStatusOffline')} (${deviceStatusCount('offline')})`}</MenuItem>
-              <MenuItem value="unknown">{`${t('deviceStatusUnknown')} (${deviceStatusCount('unknown')})`}</MenuItem>
+
+              <MenuItem value="unknown">{`Offline - Unknown (${deviceStatusCount('unknown')})`}</MenuItem>
+
             </Select>
           </FormControl>
+
+          <FormControl>
+            <InputLabel>Motion</InputLabel>
+            <Select
+              label="Motion"
+              value={filter.motion}
+              onChange={(e) => setFilter({ ...filter, motion: e.target.value })}
+            >
+              <MenuItem value="all">{`All (${deviceMovingCount('all')})`}</MenuItem>
+              <MenuItem value="motion">{`In Motion (${deviceMovingCount('motion')})`}</MenuItem>
+              <MenuItem value="no-motion">{`No Motion (${deviceMovingCount('no-motion')})`}</MenuItem>
+            </Select>
+          </FormControl>
+
           <FormControl>
             <InputLabel>{t('settingsGroups')}</InputLabel>
             <Select
               label={t('settingsGroups')}
               value={filter.groups}
-              onChange={(e) => setFilter({ ...filter, groups: e.target.value })}
+              onChange={(e) => handleChangeInGroupSelect(e)}
+              renderValue={(e) => renderValueForGroupsDropdown(e)}
               multiple
             >
+              <MenuItem key="all" value="all" className={classes.selectAll}>
+                {isGroupsSelectAll ? 'Unselect All' : 'Select All'}
+              </MenuItem>
               {Object.values(groups).sort((a, b) => a.name.localeCompare(b.name)).map((group) => (
-                <MenuItem key={group.id} value={group.id}>{group.name}</MenuItem>
+                // <MenuItem key={group.id} value={group.id}>{group.name}</MenuItem>
+                <MenuItem key={group.id} value={group.id}>
+                  <div className={classes.rowC}>
+                    <Checkbox checked={filter.groups.includes(group.id)} />
+                    <div className={classes.dropdownText}>
+                      {group.name}
+                    </div>
+                  </div>
+                </MenuItem>
               ))}
             </Select>
           </FormControl>
@@ -160,12 +291,27 @@ const MainToolbar = ({
               <MenuItem value="lastUpdate">{t('deviceLastUpdate')}</MenuItem>
             </Select>
           </FormControl>
+          {/* search by camera filter */}
+          <FormControl>
+            <InputLabel>{t('sharedFilterByCamera')}</InputLabel>
+            <Select
+              label={t('sharedFilterByCamera')}
+              value={filterByCamera}
+              onChange={(e) => setFilterByCamera(e.target.value)}
+              displayEmpty
+            >
+              <MenuItem value="All">All</MenuItem>
+              <MenuItem value="Has Camera">{t('sharedHasCamera')}</MenuItem>
+              <MenuItem value="Has No Camera">{t('sharedHasNoCamera')}</MenuItem>
+            </Select>
+          </FormControl>
           <FormGroup>
             <FormControlLabel
               control={<Checkbox checked={filterMap} onChange={(e) => setFilterMap(e.target.checked)} />}
               label={t('sharedFilterMap')}
             />
           </FormGroup>
+          <Button variant="outlined" onClick={handleButtonClick}>Export Devices</Button>
         </div>
       </Popover>
       <IconButton edge="end" onClick={() => navigate('/settings/device')} disabled={deviceReadonly}>

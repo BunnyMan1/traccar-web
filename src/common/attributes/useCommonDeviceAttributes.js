@@ -1,11 +1,15 @@
 import { useMemo } from 'react';
 
 export default (t) => useMemo(() => ({
+
+  // * CUSTOM CODE START * //
   speedLimit: {
     name: t('attributeSpeedLimit'),
     type: 'number',
     subtype: 'speed',
   },
+  // * CUSTOM CODE END * //
+
   fuelDropThreshold: {
     name: t('attributeFuelDropThreshold'),
     type: 'number',

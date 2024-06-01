@@ -5,11 +5,22 @@ import {
 import { useTranslation } from '../../common/components/LocalizationProvider';
 import useReportStyles from '../common/useReportStyles';
 
+// * CUSTOM CODE START  (Added `columnsObject`) * //
 const ColumnSelect = ({
-  columns, setColumns, columnsArray, rawValues, disabled,
+  columns, setColumns, columnsArray, columnsObject, rawValues, disabled,
 }) => {
+  // * CUSTOM CODE END * //
   const classes = useReportStyles();
   const t = useTranslation();
+
+  // * CUSTOM CODE START * //
+  const excludeList = ['totalDistance', 'startOdometer', 'endOdometer', 'hours', 'engineHours', 'odometer', 'serviceOdometer', 'tripOdometer'];
+  let columnsObjectKeys = [];
+  columns = columns.filter((item) => (!excludeList.includes(item)));
+  if (columnsArray) columnsArray = columnsArray.filter((item) => (!excludeList.includes(item[0])));
+  if (columnsObject) columnsObjectKeys = Object.keys(columnsObject).filter((item) => (!excludeList.includes(item)));
+  console.log('columnsObjectKeys', columnsObjectKeys);
+  // * CUSTOM CODE END * //
 
   return (
     <div className={classes.filterItem}>
