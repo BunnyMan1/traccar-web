@@ -25,6 +25,7 @@ import { useTranslation } from './LocalizationProvider';
 // * CUSTOM CODE START * //
 // import { useAdministrator } from '../util/permissions';
 // * CUSTOM CODE END * //
+import { useDeviceReadonly } from '../util/permissions';
 import AddressValue from './AddressValue';
 import GeofencesValue from './GeofencesValue';
 import DriverValue from './DriverValue';
@@ -35,6 +36,7 @@ const PositionValue = ({ position, property, attribute }) => {
   // * CUSTOM CODE START * //
   // const admin = useAdministrator();
   // * CUSTOM CODE END * //
+  const deviceReadonly = useDeviceReadonly();
 
   const device = useSelector((state) => state.devices.items[position.deviceId]);
 
@@ -46,14 +48,13 @@ const PositionValue = ({ position, property, attribute }) => {
   const speedUnit = useAttributePreference('speedUnit');
   const volumeUnit = useAttributePreference('volumeUnit');
   const coordinateFormat = usePreference('coordinateFormat');
-  const hours12 = usePreference('twelveHourFormat');
 
   const formatValue = () => {
     switch (key) {
       case 'fixTime':
       case 'deviceTime':
       case 'serverTime':
-        return formatTime(value, 'seconds', hours12);
+        return formatTime(value, 'seconds');
       case 'latitude':
         return formatCoordinate('latitude', value, coordinateFormat);
       case 'longitude':

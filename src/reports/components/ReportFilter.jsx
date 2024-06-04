@@ -44,7 +44,7 @@ const ReportFilter = (
   const [calendarId, setCalendarId] = useState();
 
   const scheduleDisabled = button === 'schedule' && (!description || !calendarId);
-  const disabled = (!ignoreDevice && !deviceId && !deviceIds.length && !groupIds.length) || scheduleDisabled;
+  const disabled = (!ignoreDevice && !deviceId && !deviceIds.length && !groupIds.length) || scheduleDisabled || loading;
 
   // * CUSTOM CODE START * //
   const [isDevicesSelectAll, setIsDevicesSelectAll] = useState(false);
