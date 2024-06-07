@@ -84,13 +84,11 @@ const MainPage = () => {
     groups: [],
     // * CUSTOM CODE START * //
     motion: 'all',
-    // * CUSTOM CODE END * //
   });
-  const [filterSort, setFilterSort] = usePersistedState('filterSort', '');
-  const [filterMap, setFilterMap] = usePersistedState('filterMap', false);
-  // * CUSTOM CODE START * //
-  const [filterByCamera, setFilterByCamera] = usePersistedState('filterByCamera', false);
+  const [filterSort, setFilterSort] = usePersistedState('filterSort', 'name');
+  const [filterByCamera, setFilterByCamera] = usePersistedState('filterByCamera', 'All');
   // * CUSTOM CODE END * //
+  const [filterMap, setFilterMap] = usePersistedState('filterMap', false);
 
   const [devicesOpen, setDevicesOpen] = useState(desktop);
   const [eventsOpen, setEventsOpen] = useState(false);

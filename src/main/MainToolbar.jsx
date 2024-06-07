@@ -156,6 +156,13 @@ const MainToolbar = ({
     window.location.assign(`/api/devices/xlsx?${query.toString()}`);
   });
 
+  const resetFiltersClick = useCatch(async () => {
+    setFilter({ statuses: [], groups: [], motion: 'all' });
+    setFilterSort('name');
+    setFilterByCamera('All');
+    setFilterMap(false);
+  });
+
   // * CUSTOM CODE END * //
 
   return (
@@ -286,7 +293,6 @@ const MainToolbar = ({
               onChange={(e) => setFilterSort(e.target.value)}
               displayEmpty
             >
-              <MenuItem value="">{'\u00a0'}</MenuItem>
               <MenuItem value="name">{t('sharedName')}</MenuItem>
               <MenuItem value="lastUpdate">{t('deviceLastUpdate')}</MenuItem>
             </Select>
@@ -311,6 +317,9 @@ const MainToolbar = ({
               label={t('sharedFilterMap')}
             />
           </FormGroup>
+          {/* Custom Code Start */}
+          <Button variant="outlined" color="error" onClick={resetFiltersClick}>Reset Filters</Button>
+          {/* Custom Code End */}
           <Button variant="outlined" onClick={handleButtonClick}>Export Devices</Button>
         </div>
       </Popover>
