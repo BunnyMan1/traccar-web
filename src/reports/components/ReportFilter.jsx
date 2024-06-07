@@ -44,7 +44,7 @@ const ReportFilter = (
   const [calendarId, setCalendarId] = useState();
 
   const scheduleDisabled = button === 'schedule' && (!description || !calendarId);
-  const disabled = (!ignoreDevice && !deviceId && !deviceIds.length && !groupIds.length) || scheduleDisabled || loading;
+  const disabled = (!ignoreDevice && !deviceId && !deviceIds.length && !groupIds.length) || scheduleDisabled;
 
   // * CUSTOM CODE START * //
   const [isDevicesSelectAll, setIsDevicesSelectAll] = useState(false);
@@ -81,17 +81,15 @@ const ReportFilter = (
       clearTimeout(timer);
     }, 30000);
   };
-  // Step 1: Add state to keep track of the selected "from" date
-  const [selectedFrom, setSelectedFrom] = useState(moment().startOf('day'));
 
-  // Step 2: Handle changes in the "from" date and adjust the "to" date accordingly
+  //  Handle changes in the "from" date and adjust the "to" date accordingly
   const handleFromDateChange = (value) => {
     const newFromDate = moment(value, moment.HTML5_FMT.DATETIME_LOCAL);
-    setSelectedFrom(newFromDate);
+
     // Automatically adjust the "to" date to be one month beyond the new "from" date
     const newToDate = newFromDate.clone().add(1, 'month');
     dispatch(reportsActions.updateFrom(value)); // Update the Redux state with the new "from" value
-    dispatch(reportsActions.updateTo(newToDate.format(moment.HTML5_FMT.DATETIME_LOCAL))); // Update the Redux state with the new "to" value
+    dispatch(reportsActions.updateTo(newToDate.toISOString().slice(0, 16))); // Update the Redux state with the new "to" value
   };
 
   const handleClick = (type) => {
@@ -99,6 +97,7 @@ const ReportFilter = (
     let selectedToDate; // Declare selectedToDate variable here
     let diffInMonths;
     let adjustedToDate;
+    let formatDateToLocalString;
     // * CUSTOM CODE END * //
     if (type === 'schedule') {
       handleSchedule(deviceIds, groupIds, {
@@ -107,8 +106,6 @@ const ReportFilter = (
         attributes: {},
       });
     } else {
-      let selectedFrom;
-      let selectedTo;
       switch (period) {
         // * CUSTOM CODE START * //
         case 'today':
@@ -136,19 +133,30 @@ const ReportFilter = (
           selectedToDate = moment().subtract(1, 'month').endOf('month');
           break;
         case 'custom':
-          // In case of 'custom', use the value directly from the 'TextField' as the "from" date
-          selectedFromDate = moment(from, moment.HTML5_FMT.DATETIME_LOCAL);
-          // If "to" date is beyond one month from "from" date, adjust it to be one month beyond the "from" date
-          selectedToDate = moment(to, moment.HTML5_FMT.DATETIME_LOCAL);
-          diffInMonths = selectedToDate.diff(selectedFromDate, 'months', true);
-          adjustedToDate = diffInMonths > 1 ? selectedFromDate.clone().add(1, 'month') : selectedToDate;
+          // Convert 'from' and 'to' strings to Date objects
+          selectedFromDate = new Date(from); // 'from' is assumed to be in 'YYYY-MM-DDTHH:mm' format
+          selectedToDate = new Date(to); // 'to' is assumed to be in 'YYYY-MM-DDTHH:mm' format
 
-          // Update the Redux state and local state with the new "from" value
-          dispatch(reportsActions.updateFrom(selectedFromDate.toISOString()));
-          setSelectedFrom(selectedFromDate);
+          // Calculate the difference in months between 'from' and 'to'
+          diffInMonths = (selectedToDate.getTime() - selectedFromDate.getTime()) / (1000 * 60 * 60 * 24 * 30.44); // 30.44 is the average days in a month
 
-          // Update the Redux state with the new "to" value
-          dispatch(reportsActions.updateTo(adjustedToDate.toISOString()));
+          // Adjust 'to' date if it is more than one month after 'from' date
+          selectedToDate = diffInMonths > 1 ? new Date(selectedFromDate.getTime() + (1000 * 60 * 60 * 24 * 30)) : selectedToDate; // Adding 30 days
+
+          formatDateToLocalString = (date) => {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            return `${year}-${month}-${day}T${hours}:${minutes}`;
+          };
+
+          // Update the Redux state and local state with the new 'from' value
+          dispatch(reportsActions.updateFrom(formatDateToLocalString(selectedFromDate)));
+
+          // Update the Redux state with the new 'to' value
+          dispatch(reportsActions.updateTo(formatDateToLocalString(selectedToDate)));
           // * CUSTOM CODE END * //
           break;
         default:
@@ -160,7 +168,8 @@ const ReportFilter = (
         deviceIds,
         groupIds,
         // * CUSTOM CODE START * //
-        from: selectedFromDate ? selectedFromDate.toISOString() : selectedFrom.toISOString(), // Use the new selectedFromDate if available, otherwise use the previous selectedFrom
+        // from: selectedFromDate ? selectedFromDate.toISOString() : selectedFrom.toISOString(), // Use the new selectedFromDate if available, otherwise use the previous selectedFrom
+        from: selectedFromDate.toISOString(),
         to: selectedToDate.toISOString(),
         // * CUSTOM CODE END * //
         calendarId,
@@ -303,16 +312,15 @@ const ReportFilter = (
                 value={multiDevice ? deviceIds : deviceId}
                 isOptionEqualToValue={(options, value) => options.valueOf === value.valueOf}
                 onChange={(e, v, r, d) => handleChangeInDeviceSelect(v)}
-                renderOption={(props, device) => (
-                  <li {...props}>
-
-                    {(device.id === -999 && multiDevice)
-                      ? (
+                renderOption={(props, device) => {
+                  const { key, ...otherProps } = props;
+                  return (
+                    <li key={key} {...otherProps}>
+                      {(device.id === -999 && multiDevice) ? (
                         <div className={classes.selectAll}>
                           {isDevicesSelectAll ? 'Unselect All' : 'Select All'}
                         </div>
-                      )
-                      : (
+                      ) : (
                         <div className={classes.rowC}>
                           <Checkbox size="small" checked={multiDevice ? (deviceIds.includes(device.id)) : (deviceId === device.id)} />
                           <div className={classes.dropdownText}>
@@ -320,8 +328,9 @@ const ReportFilter = (
                           </div>
                         </div>
                       )}
-                  </li>
-                )}
+                    </li>
+                  );
+                }}
                 renderInput={(params) => (
                   <TextField {...params} label={t('deviceTitle')} />
                 )}
@@ -452,7 +461,7 @@ const ReportFilter = (
                 fullWidth
                 // * CUSTOM CODE START * //
                 inputProps={{
-                  max: moment(selectedFrom).add(1, 'month').format(moment.HTML5_FMT.DATETIME_LOCAL), // Use the adjusted "to" date value
+                  max: moment(from).add(1, 'month').format(moment.HTML5_FMT.DATETIME_LOCAL), // Use the adjusted "to" date value
                 }}
               // * CUSTOM CODE END * //
               />

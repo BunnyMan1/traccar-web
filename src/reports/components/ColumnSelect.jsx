@@ -7,7 +7,9 @@ import useReportStyles from '../common/useReportStyles';
 
 // * CUSTOM CODE START  (Added `columnsObject`) * //
 const ColumnSelect = ({
-  columns, setColumns, columnsArray, columnsObject, rawValues, disabled,
+  columns, setColumns, columnsArray,
+  //  columnsObject,
+  rawValues, disabled,
 }) => {
   // * CUSTOM CODE END * //
   const classes = useReportStyles();
@@ -15,11 +17,10 @@ const ColumnSelect = ({
 
   // * CUSTOM CODE START * //
   const excludeList = ['totalDistance', 'startOdometer', 'endOdometer', 'hours', 'engineHours', 'odometer', 'serviceOdometer', 'tripOdometer'];
-  let columnsObjectKeys = [];
+  // let columnsObjectKeys = [];
   columns = columns.filter((item) => (!excludeList.includes(item)));
   if (columnsArray) columnsArray = columnsArray.filter((item) => (!excludeList.includes(item[0])));
-  if (columnsObject) columnsObjectKeys = Object.keys(columnsObject).filter((item) => (!excludeList.includes(item)));
-  console.log('columnsObjectKeys', columnsObjectKeys);
+  // if (columnsObject) columnsObjectKeys = Object.keys(columnsObject).filter((item) => (!excludeList.includes(item)));
   // * CUSTOM CODE END * //
 
   return (
