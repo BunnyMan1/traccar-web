@@ -69,7 +69,9 @@ const MainToolbar = ({
   // * CUSTOM CODE START * //
 
   filterByCamera,
+  filterByOfflineStatus,
   setFilterByCamera,
+  setFilterByOfflineStatus,
 
   // * CUSTOM CODE END * //
 
@@ -113,6 +115,30 @@ const MainToolbar = ({
       return !p.attributes || p.attributes.motion === false;
     }).length;
   };
+  
+
+  const deviceOfflineCount = (status) => {
+    const now = Date.now();
+    const twentyHoursInMillis = 20 * 60 * 60 * 1000;
+  
+    if (status === 'All') {
+      return Object.values(devices).length;
+    }
+  
+    return Object.values(devices).filter((device) => {
+      const lastUpdate = device.lastUpdate ? new Date(device.lastUpdate).getTime() : null;
+  
+      if (status === 'Offline more than 20 hours') {
+        return lastUpdate === null || (now - lastUpdate) > twentyHoursInMillis;
+      }
+  
+      if (status === 'Not Offline for 20 hours') {
+        return lastUpdate !== null && (now - lastUpdate <= twentyHoursInMillis);
+      }
+        return 0;
+    }).length;
+  }; 
+  
 
   /// Function to handle changes made to Groups dropdown by the user.
   function handleChangeInGroupSelect(e) {
@@ -160,6 +186,7 @@ const MainToolbar = ({
     setFilter({ statuses: [], groups: [], motion: 'all' });
     setFilterSort('name');
     setFilterByCamera('All');
+    setFilterByOfflineStatus('All');
     setFilterMap(false);
   });
 
@@ -311,6 +338,21 @@ const MainToolbar = ({
               <MenuItem value="Has No Camera">{t('sharedHasNoCamera')}</MenuItem>
             </Select>
           </FormControl>
+   
+         <FormControl>
+           <InputLabel>Offline Status</InputLabel>
+           <Select
+             label="Offline Status"
+             value={filterByOfflineStatus}
+             onChange={(e) => setFilterByOfflineStatus(e.target.value)}
+             displayEmpty
+           >
+               <MenuItem value="All">{`All (${deviceOfflineCount('All')})`}</MenuItem>
+               <MenuItem value="Offline more than 20 hours">{`Offline more than 20 hours (${deviceOfflineCount('Offline more than 20 hours')})`}</MenuItem>
+               <MenuItem value="Not Offline for 20 hours">{`Not Offline for 20 hours (${deviceOfflineCount('Not Offline for 20 hours')})`}</MenuItem>
+          </Select>
+         </FormControl>
+
           <FormGroup>
             <FormControlLabel
               control={<Checkbox checked={filterMap} onChange={(e) => setFilterMap(e.target.checked)} />}

@@ -3,11 +3,13 @@ import { useSelector } from 'react-redux';
 import dayjs from 'dayjs';
 
 // * CUSTOM CODE START * // (added filterByCamera)
-export default (keyword, filter, filterSort, filterMap, positions, filterByCamera, setFilteredDevices, setFilteredPositions) => {
+export default (keyword, filter, filterSort, filterMap, positions, filterByCamera,filterByOfflineStatus, setFilteredDevices, setFilteredPositions) => {
 // * CUSTOM CODE END * //
 
   const groups = useSelector((state) => state.groups.items);
   const devices = useSelector((state) => state.devices.items);
+  // const now = Date.now();
+  // const twentyHoursInMillis = 20 * 60 * 60 * 1000;
   // * CUSTOM CODE START * //
   // const positions = useSelector((state) => state.session.positions);
   // * CUSTOM CODE END * //
@@ -69,13 +71,24 @@ export default (keyword, filter, filterSort, filterMap, positions, filterByCamer
     setFilteredDevices(filterByCamera === 'All' ? filtered : filterByCamera === 'Has Camera' ? filtered.filter((device) => device.attributes.hasCamera === true) : filtered.filter((device) => device.attributes.hasCamera === false));
     // * CUSTOM CODE END * //
 
+    const now = Date.now(); 
+    const twentyHoursInMillis = 20 * 60 * 60 * 1000;
+    
+    setFilteredDevices(
+      filterByOfflineStatus === 'All'
+        ? filtered
+        : filterByOfflineStatus === 'Offline more than 20 hours'
+        ? filtered.filter((device) => device.lastUpdate === null || (now - new Date(device.lastUpdate).getTime()) > twentyHoursInMillis)
+        :  filtered.filter((device) => device.lastUpdate !== null && (now - new Date(device.lastUpdate).getTime()) <= twentyHoursInMillis)
+    );
+
     setFilteredPositions(filterMap
       ? filtered.map((device) => positions[device.id]).filter(Boolean)
       : Object.values(positions));
   },
 
   // * CUSTOM CODE START * // (added filterByCamera)
-  [keyword, filter, filterSort, filterMap, groups, devices, positions, filterByCamera, setFilteredDevices, setFilteredPositions],
+  [keyword, filter, filterSort, filterMap, groups, devices, positions, filterByCamera,filterByOfflineStatus, setFilteredDevices, setFilteredPositions],
   );
   // * CUSTOM CODE END * //
 };
