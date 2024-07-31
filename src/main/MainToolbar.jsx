@@ -18,6 +18,7 @@ import DeviceRow from './DeviceRow';
 
 // * CUSTOM CODE START * //
 import { useCatch } from '../reactHelper';
+import dayjs from 'dayjs';
 // * CUSTOM CODE END * //
 
 const useStyles = makeStyles((theme) => ({
@@ -97,6 +98,7 @@ const MainToolbar = ({
 
   // * CUSTOM CODE START * //
   const [isGroupsSelectAll, setIsGroupsSelectAll] = useState(false);
+  const [offlineStatus, setOfflineStatus] = useState('all');
   // * CUSTOM CODE END * //
 
   const deviceStatusCount = (status) => Object.values(devices).filter((d) => d.status === status).length;
@@ -151,8 +153,18 @@ const MainToolbar = ({
   }
 
   const handleButtonClick = useCatch(async () => {
+    const now = dayjs();
     const query = new URLSearchParams({});
-    filteredDevices.forEach((device) => { query.append('deviceId', device.id); });
+    filteredDevices.forEach((device) => {
+      const lastUpdate = dayjs(device.lastUpdate);
+      const isOfflineMoreThan20Hours = !lastUpdate.isValid() || now.diff(lastUpdate, 'hour') > 20;
+
+      if (offlineStatus === 'all' ||
+          (offlineStatus === 'offline20Plus' && isOfflineMoreThan20Hours) ||
+          (offlineStatus === 'offlineLess20' && !isOfflineMoreThan20Hours)) {
+        query.append('deviceId', device.id);
+      }
+    });
     window.location.assign(`/api/devices/xlsx?${query.toString()}`);
   });
 
@@ -309,6 +321,18 @@ const MainToolbar = ({
               <MenuItem value="All">All</MenuItem>
               <MenuItem value="Has Camera">{t('sharedHasCamera')}</MenuItem>
               <MenuItem value="Has No Camera">{t('sharedHasNoCamera')}</MenuItem>
+            </Select>
+          </FormControl>
+          <FormControl>
+            <InputLabel>Offline Status</InputLabel>
+            <Select
+              label="Offline Status"
+              value={offlineStatus}
+              onChange={(e) => setOfflineStatus(e.target.value)}
+            >
+              <MenuItem value="all">All</MenuItem>
+              <MenuItem value="offline20Plus">Offline for more than 20 hours</MenuItem>
+              <MenuItem value="offlineLess20">Not (Offline for more than 20 hours)</MenuItem>
             </Select>
           </FormControl>
           <FormGroup>

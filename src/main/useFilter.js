@@ -1,9 +1,10 @@
 import { useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import dayjs from 'dayjs';
+import { TrendingUpOutlined } from '@mui/icons-material';
 
 // * CUSTOM CODE START * // (added filterByCamera)
-export default (keyword, filter, filterSort, filterMap, positions, filterByCamera, setFilteredDevices, setFilteredPositions) => {
+export default (keyword, filter, filterSort, filterMap, positions, filterByCamera, setFilteredDevices, setFilteredPositions, offlineStatus) => {
 // * CUSTOM CODE END * //
 
   const groups = useSelector((state) => state.groups.items);
@@ -14,6 +15,8 @@ export default (keyword, filter, filterSort, filterMap, positions, filterByCamer
 
   // eslint-disable-next-line function-paren-newline
   useEffect(() => {
+    const now = dayjs(); // Get the current time
+
     const deviceGroups = (device) => {
       const groupIds = [];
       let { groupId } = device;
@@ -46,7 +49,25 @@ export default (keyword, filter, filterSort, filterMap, positions, filterByCamer
       .filter((device) => {
         const lowerCaseKeyword = keyword.toLowerCase();
         return [device.name, device.uniqueId, device.phone, device.model, device.contact].some((s) => s && s.toLowerCase().includes(lowerCaseKeyword));
-      });
+      })
+
+      // * CUSTOM CODE START * //
+      .filter((device) => {
+        const now = dayjs(); // Ensure `now` is defined inside the filtering function
+        const lastUpdate = dayjs(device.lastUpdate);
+        const isOfflineMoreThan20Hours = device.lastUpdate === null || now.diff(lastUpdate, 'hour') > 20;
+              
+        if (offlineStatus === 'all') {
+          return true;
+        } else if (offlineStatus === 'offline20Plus') {
+          return !device.lastUpdate || isOfflineMoreThan20Hours;
+        } else if (offlineStatus === 'offlineLess20') {
+          return device.lastUpdate && !isOfflineMoreThan20Hours;
+        }
+        return true;
+      });       
+      // * CUSTOM CODE END * //
+
     switch (filterSort) {
       case 'name':
         filtered.sort((device1, device2) => device1.name.localeCompare(device2.name));
@@ -75,7 +96,7 @@ export default (keyword, filter, filterSort, filterMap, positions, filterByCamer
   },
 
   // * CUSTOM CODE START * // (added filterByCamera)
-  [keyword, filter, filterSort, filterMap, groups, devices, positions, filterByCamera, setFilteredDevices, setFilteredPositions],
+  [keyword, filter, filterSort, filterMap, groups, devices, positions, filterByCamera, setFilteredDevices, setFilteredPositions, offlineStatus],
   );
   // * CUSTOM CODE END * //
 };
