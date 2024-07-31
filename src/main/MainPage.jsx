@@ -87,6 +87,7 @@ const MainPage = () => {
   });
   const [filterSort, setFilterSort] = usePersistedState('filterSort', 'name');
   const [filterByCamera, setFilterByCamera] = usePersistedState('filterByCamera', 'All');
+  const [filterByOfflineStatus, setFilterByOfflineStatus] = usePersistedState('filterByOfflineStatus','all');
   // * CUSTOM CODE END * //
   const [filterMap, setFilterMap] = usePersistedState('filterMap', false);
 
@@ -102,7 +103,7 @@ const MainPage = () => {
   }, [desktop, mapOnSelect, selectedDeviceId]);
 
   // * CUSTOM CODE START * //  (added `filterByCamera` to useFilter )
-  useFilter(keyword, filter, filterSort, filterMap, positions, filterByCamera, setFilteredDevices, setFilteredPositions);
+  useFilter(keyword, filter, filterSort, filterMap, positions, filterByCamera,filterByOfflineStatus, setFilteredDevices, setFilteredPositions);
   // * CUSTOM CODE END * //
 
   return (
@@ -127,7 +128,9 @@ const MainPage = () => {
             filterSort={filterSort}
             // * CUSTOM CODE START * //
             filterByCamera={filterByCamera}
+            filterByOfflineStatus={filterByOfflineStatus}
             setFilterByCamera={setFilterByCamera}
+            setFilterByOfflineStatus={setFilterByOfflineStatus}
             // * CUSTOM CODE END * //
             setFilterSort={setFilterSort}
             filterMap={filterMap}
