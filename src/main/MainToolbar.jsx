@@ -7,6 +7,11 @@ import {
   Button,
   // * CUSTOM CODE END * //
 } from '@mui/material';
+
+// * CUSTOM CODE START * //
+import dayjs from 'dayjs';
+// * CUSTOM CODE END * //
+
 import { makeStyles, useTheme } from '@mui/styles';
 import MapIcon from '@mui/icons-material/Map';
 import ViewListIcon from '@mui/icons-material/ViewList';
@@ -18,7 +23,6 @@ import DeviceRow from './DeviceRow';
 
 // * CUSTOM CODE START * //
 import { useCatch } from '../reactHelper';
-import dayjs from 'dayjs';
 // * CUSTOM CODE END * //
 
 const useStyles = makeStyles((theme) => ({
@@ -159,9 +163,9 @@ const MainToolbar = ({
       const lastUpdate = dayjs(device.lastUpdate);
       const isOfflineMoreThan20Hours = !lastUpdate.isValid() || now.diff(lastUpdate, 'hour') > 20;
 
-      if (offlineStatus === 'all' ||
-          (offlineStatus === 'offline20Plus' && isOfflineMoreThan20Hours) ||
-          (offlineStatus === 'offlineLess20' && !isOfflineMoreThan20Hours)) {
+      if (offlineStatus === 'all'
+        || (offlineStatus === 'offline20Plus' && isOfflineMoreThan20Hours)
+        || (offlineStatus === 'offlineLess20' && !isOfflineMoreThan20Hours)) {
         query.append('deviceId', device.id);
       }
     });

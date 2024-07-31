@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import dayjs from 'dayjs';
-import { TrendingUpOutlined } from '@mui/icons-material';
+// import { TrendingUpOutlined } from '@mui/icons-material';
 
 // * CUSTOM CODE START * // (added filterByCamera)
 export default (keyword, filter, filterSort, filterMap, positions, filterByCamera, setFilteredDevices, setFilteredPositions, offlineStatus) => {
@@ -65,7 +65,7 @@ export default (keyword, filter, filterSort, filterMap, positions, filterByCamer
           return device.lastUpdate && !isOfflineMoreThan20Hours;
         }
         return true;
-      });       
+      });
       // * CUSTOM CODE END * //
 
     switch (filterSort) {
